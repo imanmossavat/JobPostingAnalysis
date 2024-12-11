@@ -1,4 +1,6 @@
 data/raw_1/*
+data/raw/*
+data/reports/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
