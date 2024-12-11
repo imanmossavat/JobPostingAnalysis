@@ -1,6 +1,13 @@
 data/raw_1/*
-data/raw/*
-data/reports/*
+
+users/viktor/data/raw/*
+users/viktor/data/reports/*
+
+users/leo/data/raw/*
+users/leo/data/reports/*
+
+users/iman/data/raw/*
+users/iman/data/reports/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
