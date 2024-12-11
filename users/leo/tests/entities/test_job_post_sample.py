@@ -39,3 +39,18 @@ def test_job_post_sample_to_df():
     job_posts_df = job_post_sample.to_df()
 
     assert job_posts_df.equals(jobs_df)
+
+
+def test_job_post_sample_from_df():
+    jobs_df = pd.DataFrame([JOB_POST])
+    job_post_sample = JobPostSample.from_df(jobs_df)
+
+    assert job_post_sample.jobs[0].job_id == "1"
+    assert job_post_sample.jobs[0].title == "title1"
+    assert job_post_sample.jobs[0].description == "description1"
+    assert job_post_sample.jobs[0].company_name == "company1"
+    assert job_post_sample.jobs[0].location == "location1"
+    assert job_post_sample.jobs[0].original_listed_time == 1625309472
+    assert job_post_sample.jobs[0].language == "english"
+    assert job_post_sample.jobs[0].skills == "Python, Java, C++"
+    assert job_post_sample.jobs[0].industries == "Technology, Software"

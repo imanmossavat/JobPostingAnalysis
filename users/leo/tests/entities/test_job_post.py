@@ -15,15 +15,15 @@ JOB_POST = {
 def test_job_entity_init():
     job = JobPost(**JOB_POST)
 
-    assert job.job_id == "1"
-    assert job.title == "title1"
-    assert job.description == "description1"
-    assert job.company_name == "company1"
-    assert job.location == "location1"
-    assert job.original_listed_time == 1625309472
-    assert job.language == "english"
-    assert job.skills == "Python, Java, C++"
-    assert job.industries == "Technology, Software"
+    assert job.job_id == JOB_POST["job_id"]
+    assert job.title == JOB_POST["title"]
+    assert job.description == JOB_POST["description"]
+    assert job.company_name == JOB_POST["company_name"]
+    assert job.location == JOB_POST["location"]
+    assert job.original_listed_time == JOB_POST["original_listed_time"]
+    assert job.language == JOB_POST["language"]
+    assert job.skills == JOB_POST["skills"]
+    assert job.industries == JOB_POST["industries"]
 
 def test_job_entity_to_list():
     job_attributes_expected = [
@@ -41,3 +41,16 @@ def test_job_entity_to_list():
     job_list = job.to_list()
 
     assert job_list == job_attributes_expected
+
+
+def test_job_entity_from_dict():
+    job = JobPost.from_dict(JOB_POST)
+    assert job.job_id == JOB_POST["job_id"]
+    assert job.title == JOB_POST["title"]
+    assert job.description == JOB_POST["description"]
+    assert job.company_name == JOB_POST["company_name"]
+    assert job.location == JOB_POST["location"]
+    assert job.original_listed_time == JOB_POST["original_listed_time"]
+    assert job.language == JOB_POST["language"]
+    assert job.skills == JOB_POST["skills"]
+    assert job.industries == JOB_POST["industries"]
