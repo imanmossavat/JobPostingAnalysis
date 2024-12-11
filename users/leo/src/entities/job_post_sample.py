@@ -21,3 +21,21 @@ class JobPostSample:
                 "industries",
             ],
         )
+
+    @classmethod
+    def from_df(cls, df: pd.DataFrame):
+        jobs = []
+        for _, row in df.iterrows():
+            job = JobPost(
+                job_id=row["job_id"],
+                title=row["title"],
+                description=row["description"],
+                company_name=row["company_name"],
+                location=row["location"],
+                original_listed_time=row["original_listed_time"],
+                language=row["language"],
+                skills=row["skills"],
+                industries=row["industries"],
+            )
+            jobs.append(job)
+        return cls(jobs)

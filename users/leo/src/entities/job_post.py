@@ -40,3 +40,7 @@ class JobPost:
             self.skills,
             self.industries,
         ]
+    
+    @classmethod
+    def from_dict(cls, job_dict):
+        return JobPost(**job_dict)
