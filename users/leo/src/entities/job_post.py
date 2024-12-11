@@ -44,3 +44,17 @@ class JobPost:
     @classmethod
     def from_dict(cls, job_dict):
         return JobPost(**job_dict)
+
+    def to_dict(self):
+        return {
+            "job_id": self.job_id,
+            "title": self.title,
+            "description": self.description,
+            "company_name": self.company_name,
+            "location": self.location,
+            "original_listed_time": self.original_listed_time,
+            "language": self.language,
+            "skills": self.skills,
+            "industries": self.industries,
+        }   
+        

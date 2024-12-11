@@ -54,3 +54,10 @@ def test_job_entity_from_dict():
     assert job.language == JOB_POST["language"]
     assert job.skills == JOB_POST["skills"]
     assert job.industries == JOB_POST["industries"]
+
+
+def test_job_entity_to_dict():
+    job = JobPost(**JOB_POST)
+    job_dict = job.to_dict()
+
+    assert job_dict == JOB_POST
