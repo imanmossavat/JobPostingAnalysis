@@ -1,0 +1,1 @@
+Subfolder 'raw' is for the datasets while subfolder 'reports' is for the subfolders with visualisations and reports

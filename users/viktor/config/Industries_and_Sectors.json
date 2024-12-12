@@ -1,0 +1,50 @@
+{
+    "Finances / Trade": [
+        "banking", "bank", "banks", "investing", "insurance", "finance", "stocks", "capital", "assets", "loans", "mortgage", "financial planning", "financial", "audit", "payments", "loans", "brands",
+        "fintech", "cryptocurrencies", "currencies", "commodities", "cryptos", "exchanges", "trading", "trade", "transactions", "trades"
+    ],
+    "Healthcare": [
+        "health", "healthcare", "medicine", "pharmacy", "pharmacies", "wellness", "hospital", "hospitals", "doctor", "doctors", "nurse", "nurses", "mental health", "public health", "patient care", "therapy", "health insurance", "medical research",
+        "disability", "molecules", "patient", "patients", "nursing", "surgery", "surgeries", "treatments", "treatment", "cosmetic surgery", "invasive surgery",
+        "sideeffects", "side effects", "image guided therapy", "imageguided therapy", "xray"
+    ],
+    "Marketing": [
+        "digital marketing", "media", "brand management", "social media", "advertising", "pr", "digital media",
+        "social media", "content", "marketing", "customer engagement", "brands", "branding", "marketing campaigns", "marketing campaign", 
+        "ads", "market research", "marketing analytics", "advertiser", "advertisers"
+    ],
+    "Education": [
+        "education", "educational", "educational institute", "curriculum", "academic", "teaching", "scholarship", "studies", "pedagogy", "educational technology","edtech",
+        "teachers", "teacher", "lti apps", "learning environment", "smart learning", "training provider", "educational research", "academic research", "ludo",
+        "schools", "elearning", "academics"
+    ],
+    "Environment": [
+        "agriculture", "agricultural", "herbicides", "pesticides", "carbon", "sustainability", "energy",
+        "electricity", "solar", "inverter", "electric cars", "charging", "charge", "charger", "sustainable", "circular economy", "biorenewable",
+        "renewable", "climate", "biodiversity", "recycling", "recycle", "conversion", "emissions" 
+    ],
+    "Manufacturing": [
+        "manufacturing", "industrial", "automation", "materials", "energy", "production", "industrial design", "automotive", "mechatronics",
+        "power", "circuit", "circuits", "magnets", "magnet", "scada", "agvs", "robotics", "robot", "ic", "electricity", "facilities", "warehouse", "assembly",
+        "semiconductor", "electronics", "electronic", "mechanical", "mechanical engineering", "electrical engineering", "industrial engineering",
+        "hardware", "sensors", "firmware", "devices", "pcb", "embedded systems", "fpga", "fpgas"
+    ],
+    "Software Development": [
+        "fullstack", "full stack", "web development", "api", "apis", "database", "databases", "serverside",
+        "frontend", "backend", "devops", "git", "oop", "cicd", "cloud", "clouds", "container", "containerization", "programming", "objectoriented_programming",
+        "html", "frontend", "css", "javascript", "reactjs", "vuejs", "react", "vue", "typescript", "angular", "redux", "restful", "nodejs", "python", "java", "spring",
+        "microservices", "orm", "docker", "kubernetes"
+    ],
+    "Logistics / Transportation": [
+        "logistics", "transport", "transport order", "transportation order", "transport orders", "transportation orders", "transportation", "railfreight", "rail", "freight", "agvs", "agv", "order management", "supply chain",
+        "transport", "order", "goods", "logistic", "vehicle", "vehicles", "carrier", "bike", "truck", "trailer", "car", "forwarder", "forwarders",
+        "warehouse", "driver", "drivers", "shippers", "shipper", "shipping", "conveyor"
+      ],
+    "Security": [
+        "vulnerability", "network", "risk management", "cybersecurity", "security", "firewall", "threat detection", "incident response", "protection",
+        "compliance", "siem", "intrusion detection", "social engineering", "encryption", "threat analysis", "incident management",
+        "secure coding practices", "devsecops", "identity and access management", "zero trust architecture", "penetration testing", 
+        "hacking", "hacker", "ethical hacking", "white hat", "exploit development", "social engineering", "malware", "cryptography",
+        "osint", "red teaming", "bug bounty", "routing", "tcp", "ip", "lan", "wan", "vpn", "sdwan", "cisco", "security threat"
+    ]
+  }
