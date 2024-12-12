@@ -3,6 +3,7 @@ from unittest import mock
 from src.services.get_job_posts import JobPostFilter
 from src.entities.job_post import JobPost
 from src.entities.job_post_sample import JobPostSample
+from src.requests.search_posts import build_search_posts_request
 
 
 @pytest.fixture
@@ -47,8 +48,12 @@ def test_filter_posts_without_parameters(entity_job_post):
     repo = mock.Mock()
     repo.list.return_value = entity_job_post
     job_filter = JobPostFilter()
-    result = job_filter.get_jobs_matching_filters(repo)
-    repo.list.assert_called_with()
-    assert result == entity_job_post
+
+    request = build_search_posts_request()
+    response = job_filter.search_jobs(repo, request)
+
+    assert bool(response) is True
+    repo.list.assert_called_with(filters=None)
+    assert response.value == entity_job_post
 
 
