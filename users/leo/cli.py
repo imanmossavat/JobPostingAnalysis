@@ -1,6 +1,7 @@
 import pandas as pd
 from src.external_systems.dataframe_repo import DataFrameRepo
 from src.services.get_job_posts import JobPostFilter
+from src.requests.search_posts import build_search_posts_request
 
 
 JOB_POST_1 = {
@@ -26,8 +27,9 @@ JOB_POST_2 = {
     "industries": "Technology, Software",
 }
 
+request = build_search_posts_request()
 data = pd.DataFrame([JOB_POST_1, JOB_POST_2])
 repo = DataFrameRepo(data)
 job_filter = JobPostFilter()
-result = job_filter.get_jobs_matching_filters(repo)
-print([job.to_dict() for job in result])
+response = job_filter.search_jobs(repo, request=request)
+print([job.to_dict() for job in response.value])

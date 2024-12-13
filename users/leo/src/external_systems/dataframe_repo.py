@@ -7,5 +7,5 @@ class DataFrameRepo(Repository):
     def __init__(self, data: pd.DataFrame):
         self.data = data
 
-    def list(self):
+    def list(self, filters=None):
         return JobPostSample.from_df(self.data).jobs
