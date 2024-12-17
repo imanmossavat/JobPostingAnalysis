@@ -8,4 +8,27 @@ class DataFrameRepo(Repository):
         self.data = data
 
     def list(self, filters=None):
-        return JobPostSample.from_df(self.data).jobs
+        if not filters:
+            return JobPostSample.from_df(self.data).jobs
+        jobs = self.data
+        if "industries" in filters:
+            selected_industries = filters["industries"]
+            jobs = jobs[
+                jobs["industries"].apply(
+                    lambda x: any(industry in x for industry in selected_industries)
+                )
+            ]
+        if "skills" in filters:
+            selected_skills = filters["skills"]
+            jobs = jobs[
+                jobs["skills"].apply(
+                    lambda x: any(skill in x for skill in selected_skills)
+                )
+            ]
+        if "include_companies" in filters:
+            selected_companies = filters["include_companies"]
+            jobs = pd.concat(
+                [jobs, self.data[self.data["company_name"].isin(selected_companies)]]
+            ).drop_duplicates(subset="job_id", keep="first")
+
+        return JobPostSample.from_df(jobs).jobs

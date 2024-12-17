@@ -1,6 +1,6 @@
 import pandas as pd
 from src.external_systems.dataframe_repo import DataFrameRepo
-from src.services.get_job_posts import JobPostFilter
+from src.services.job_post_filter import JobPostFilter
 from src.requests.search_posts import build_search_posts_request
 
 
@@ -24,10 +24,12 @@ JOB_POST_2 = {
     "original_listed_time": 2,
     "language": "english",
     "skills": "Python, Java, C++",
-    "industries": "Technology, Software",
+    "industries": "Medicine, Software",
 }
 
-request = build_search_posts_request()
+request = build_search_posts_request(
+    filters={"keyword_search": {"industries": ["Technology"]}}
+)
 data = pd.DataFrame([JOB_POST_1, JOB_POST_2])
 repo = DataFrameRepo(data)
 job_filter = JobPostFilter()
