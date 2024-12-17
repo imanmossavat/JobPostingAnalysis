@@ -4,6 +4,7 @@ job_post.py
 This module defines the JobPost class, which represents a job posting with various attributes such as job ID, title, description, company name, location, original listed time, language, skills, and industries.
 """
 
+
 class JobPost:
     def __init__(
         self,
@@ -40,7 +41,7 @@ class JobPost:
             self.skills,
             self.industries,
         ]
-    
+
     @classmethod
     def from_dict(cls, job_dict):
         return JobPost(**job_dict)
@@ -56,5 +57,4 @@ class JobPost:
             "language": self.language,
             "skills": self.skills,
             "industries": self.industries,
-        }   
-        
+        }

@@ -1,10 +1,15 @@
+"""
+This module defines the JobPostSample class, which provides methods to convert
+a list of JobPost objects to a pandas DataFrame and vice versa.
+"""
+
 import pandas as pd
 from src.entities.job_post import JobPost
+
 
 class JobPostSample:
     def __init__(self, jobs: list[JobPost]):
         self.jobs = jobs
-
 
     def to_df(self):
         return pd.DataFrame(
