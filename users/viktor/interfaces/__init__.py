@@ -1,3 +1,3 @@
 from .InterfaceBase import IWordCloudGenerator, ITextPreprocessor, ITopicModel, IFeatureExtractor, ISemiannualFeatureDistribution
 from .InterfaceBase import ISoftmaxTransformer, ITopicOverlapGraphGenerator, ITopicAssignment, ISkillKnowledgeExtractor
-from .InterfaceBase import IWord2VecEmbeddingTrendAnalysis, IKeywordFeatureExtractor, IBoxPlots
+from .InterfaceBase import IWord2VecEmbeddingTrendAnalysis, IKeywordFeatureExtractor, IBoxPlots, IDatasetRegistry

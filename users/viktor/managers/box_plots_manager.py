@@ -4,6 +4,7 @@ import os
 import json
 import sys
 from modules import KeywordFeatureExtractorBoxPlots, BoxPlotsVisualizer
+from interfaces import IKeywordFeatureExtractor, IBoxPlots
 
 from config import Config
 
@@ -13,6 +14,7 @@ configs = Config()
 topics_file = configs.topics_file
 csv_dataset = configs.csv_dataset
 text_column = configs.text_column
+name_of_topics = configs.name_of_topics
 reports_folder_path = configs.reports_folder_path
 
 def Box_Plots_Manager(output_subfolder):
@@ -52,11 +54,11 @@ def Box_Plots_Manager(output_subfolder):
         sys.exit(1)
 
     try:
-        # Initialize keyword feature extractor
-        kfe = KeywordFeatureExtractorBoxPlots()
+        # Initialize keyword feature extractor using the interface IKeywordFeatureExtractor
+        kfe: IKeywordFeatureExtractor = KeywordFeatureExtractorBoxPlots(df, text_column, keyword_dict, temp=0.5)
 
         # Apply keyword feature extraction
-        df_features = kfe.extract_features(df, text_column, keyword_dict, temp=0.5)
+        df_features = kfe.extract_features()
 
         print(df_features.head())
 
@@ -87,11 +89,11 @@ def Box_Plots_Manager(output_subfolder):
         sys.exit(1)
 
     try:
-        # Initialize visualizer
-        box_plots_visualizer = BoxPlotsVisualizer()
+        # Initialize visualizer using the interface IBoxPlots
+        box_plots_visualizer: IBoxPlots = BoxPlotsVisualizer(trend_df, monthly_trend_df, role_columns, output_subfolder, reports_folder_path, name_of_topics)
 
         # Plot the feature percentage distribution
-        box_plots_visualizer.plot_distribution(trend_df, monthly_trend_df, role_columns, output_subfolder, reports_folder_path)
+        box_plots_visualizer.plot_distribution()
 
     except Exception as e:
         print(f"Unexpected error during visualization: {e}")

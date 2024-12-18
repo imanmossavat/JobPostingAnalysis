@@ -1,8 +1,10 @@
 import os
-from config import Config
-from modules import NMFModel
 import pandas as pd
 from datetime import datetime
+
+from config import Config
+from modules import NMFModel
+from interfaces import ITopicModel
 
 # Load the dataset path and stopword files from the configuration
 configs = Config()
@@ -60,7 +62,7 @@ def Topic_Modeling_Manager(output_folder, n_topics, num_top_words, epochs):
         os.makedirs(output_folder_path, exist_ok=True)
         
         # Initialize the NMF model with the specified parameters
-        nmf_model = NMFModel(
+        nmf_model :ITopicModel = NMFModel(
             n_topics=n_topics, 
             data=data, 
             stopword_files=stopword_file_names, 

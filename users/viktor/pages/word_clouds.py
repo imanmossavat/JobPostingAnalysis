@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from managers.word_clouds_manager import Word_Clouds_Manager
+from managers import Word_Clouds_Manager
 import os
 
 # Streamlit app setup

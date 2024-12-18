@@ -4,7 +4,9 @@ import json
 
 from config import Config
 
-from modules.word_clouds import WordCloudGenerator
+from modules import WordCloudGenerator
+from interfaces import IWordCloudGenerator
+
 from datetime import datetime
 
 # Load configuration
@@ -63,15 +65,13 @@ def Word_Clouds_Manager(output_folder):
 
     # Initialize the WordCloudGenerator
     try:
-        generator = WordCloudGenerator()
+        generator :IWordCloudGenerator = WordCloudGenerator(data, keyword_dict, output_folder_path, name_of_topics, stopword_file_names)
     except Exception as e:
         raise RuntimeError(f"Failed to initialize WordCloudGenerator: {e}")
 
     # Generate the WordCloud images
     try:
-        image_paths = generator.generate_wordcloud_for_topic(
-            data, keyword_dict, output_folder_path, name_of_topics, stopword_file_names
-        )
+        image_paths = generator.generate_wordcloud_for_topic()
     except Exception as e:
         raise RuntimeError(f"Error generating WordCloud images: {e}")
 

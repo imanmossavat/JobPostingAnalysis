@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 # File names to look for
 file_names = ["stop_words_custom.txt", "stop_words_dutch.txt", "stop_words_english.txt"]
@@ -13,6 +14,8 @@ stopword_file_names = [os.path.join(current_directory, file) for file in file_na
 data_folder = os.path.join(current_directory, 'data')
 
 raw_data_name = 'raw'
+
+registry_folder_name = 'registry'
 
 # English dataset path
 english_dataset = "output_file_english_20241114_113227.csv"
@@ -33,3 +36,10 @@ job_titles_clusters = os.path.join(config_folder, "Job_Titles_Clusters.json")
 
 # path to subfolder reports
 reports_folder_path = os.path.join(data_folder, "reports")
+
+# path to subfolder registry
+registry_folder_path = os.path.join(data_folder, "registry")
+
+# path to file registry
+registry_file_name = "registry.csv"
+registry_file_path = Path(data_folder) / "registry" / registry_file_name

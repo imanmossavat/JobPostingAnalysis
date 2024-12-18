@@ -5,37 +5,39 @@ import numpy as np
 
 class IWordCloudGenerator(ABC):
     """
-    Abstract base class for a word cloud generator.
-    
-    This class defines the interface for generating word clouds based on topic-specific keywords 
-    from a DataFrame of text data. The output is a list of strings representing the generated word clouds.
+    Interface for WordCloudGenerator classes.
     """
-    
+
     @abstractmethod
-    def generate_wordcloud_for_topic(
-        self, 
-        df: pd.DataFrame, 
-        keyword_dict: Dict[str, List[str]], 
-        output_folder: str, 
-        name_of_topics: str, 
-        column: str = 'Description'
-    ) -> List[str]:
+    def __init__(self, 
+                 df: pd.DataFrame, 
+                 keyword_dict: Dict[str, List[str]], 
+                 output_folder: str, 
+                 name_of_topics: str, 
+                 stopword_files: List[str], 
+                 column: str = 'Description'):
         """
-        Generates word clouds for specific topics based on a keyword dictionary.
+        Initialize the WordCloudGenerator.
 
-        Args:
-            df (pd.DataFrame): The DataFrame containing the text data.
-            keyword_dict (Dict[str, List[str]]): A dictionary where the keys are topic names 
-                                                 and the values are lists of keywords associated with each topic.
-            output_folder (str): Path to the folder where the word clouds should be saved.
-            name_of_topics (str): Name or identifier of the topics for which the word cloud is generated.
-            column (str): The column name in the DataFrame containing the text data (default is 'Description').
-
-        Returns:
-            List[str]: A list of strings representing the generated word clouds (or paths to saved word clouds).
+        Parameters:
+        df (pd.DataFrame): DataFrame containing job descriptions and other relevant data.
+        keyword_dict (dict): Dictionary where keys are topic names and values are lists of associated keywords.
+        output_folder (str): Folder where the generated WordCloud images will be saved.
+        name_of_topics (str): Common title for the WordCloud topics.
+        stopword_files (list): List of paths to stopword files for text preprocessing.
+        column (str): Name of the column containing job descriptions in the DataFrame.
         """
         pass
 
+    @abstractmethod
+    def generate_wordcloud_for_topic(self) -> List[str]:
+        """
+        Generate WordCloud images for each topic based on keyword frequencies in job descriptions.
+
+        Returns:
+        list: Paths to the generated WordCloud images.
+        """
+        pass
 
 class ITextPreprocessor(ABC):
     """
@@ -58,24 +60,93 @@ class ITextPreprocessor(ABC):
         """
         pass
 
+class IDatasetRegistry(ABC):
+    """
+    Interface for IDatasetRegistry class, defining the methods that should be implemented
+    to manage datasets in a structured way.
+    """
+
+    @abstractmethod
+    def __init__(self, dataset, project_name, dataset_name, BASE_FOLDER, REGISTRY_FILE):
+        """
+        Initialize the IDatasetRegistry class.
+
+        Args:
+            dataset: The dataset file object to be saved or removed.
+            project_name (str): The name of the project folder.
+            dataset_name (str): The name of the dataset file.
+            BASE_FOLDER (str): The base directory where projects and datasets are stored.
+            REGISTRY_FILE (Path): Path to the registry file (CSV) for tracking datasets.
+        """
+        pass
+
+    @abstractmethod
+    def save_dataset(self) -> str:
+        """
+        Save a dataset to the specified project folder and update the registry file.
+
+        Returns:
+            str: Success or error message.
+        """
+        pass
+
+    @abstractmethod
+    def remove_dataset(self) -> str:
+        """
+        Remove a dataset file from the project folder and delete its registry entry.
+
+        Returns:
+            str: Success or error message.
+        """
+        pass
+
+    @abstractmethod
+    def get_existing_projects(self) -> List[str]:
+        """
+        Retrieve a list of existing projects (folders) in the base directory.
+
+        Returns:
+            list: A list of project folder names found in the base directory.
+        """
+        pass
+
+    @abstractmethod
+    def get_datasets_in_project(self) -> List[str]:
+        """
+        Retrieve a list of dataset files within the specified project folder.
+
+        Returns:
+            list: A list of dataset file names in the project folder.
+        """
+        pass
+
 class IFeatureExtractor(ABC):
     """
-    Abstract base class for feature extraction.
-
-    Methods:
-        extract_features(df: pd.DataFrame) -> pd.DataFrame:
-            Extract features from a DataFrame and return the transformed DataFrame.
+    Interface for feature extraction implementations.
     """
+
+    @abstractmethod
+    def __init__(self, column: str, keyword_dict: Dict[str, list], temp: float = 1.0):
+        """
+        Initialize the feature extractor.
+
+        Args:
+            column (str): Name of the column containing text data.
+            keyword_dict (dict): Dictionary mapping feature names to lists of keywords.
+            temp (float): Temperature parameter for normalization (optional).
+        """
+        pass
+
     @abstractmethod
     def extract_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Abstract method to extract features from a DataFrame.
+        Extract features from the input DataFrame.
 
         Args:
-            df (pd.DataFrame): The input DataFrame containing the data.
+            df (pd.DataFrame): The input DataFrame containing text data.
 
         Returns:
-            pd.DataFrame: The transformed DataFrame with extracted features.
+            pd.DataFrame: A DataFrame with extracted features.
         """
         pass
 
@@ -130,18 +201,58 @@ class ISoftmaxTransformer(ABC):
         pass
 
 class IKeywordFeatureExtractor(ABC):
-    @abstractmethod
-    def extract_features(self, df: pd.DataFrame, column: str, keyword_dict: Dict[str, List[str]], temp: float = 1.0) -> pd.DataFrame:
+    def __init__(self, df: pd.DataFrame, column: str, keyword_dict: dict, temp: float = 0.5):
         """
-        Extract features from a text column based on a keyword dictionary.
+        Initialize the Keyword Feature Extractor interface.
+
+        Args:
+            df (pd.DataFrame): DataFrame containing text data.
+            column (str): Column name in the DataFrame containing the text.
+            keyword_dict (dict): A dictionary mapping feature names to keyword lists.
+            temp (float, optional): Temperature value for softmax scaling (default is 0.5).
+        """
+        self.df = df
+        self.column = column
+        self.keyword_dict = keyword_dict
+        self.temp = temp
+
+    @abstractmethod
+    def extract_features(self) -> pd.DataFrame:
+        """
+        Abstract method to extract features from the DataFrame based on the keyword dictionary.
+
+        Returns:
+            pd.DataFrame: DataFrame with new features.
         """
         pass
 
+
 class IBoxPlots(ABC):
-    @abstractmethod
-    def plot_distribution(self, trend_df: pd.DataFrame, monthly_trend_df: pd.DataFrame, role_columns: List[str], output_subfolder_base: str) -> None:
+    def __init__(self, trend_df: pd.DataFrame, monthly_trend_df: pd.DataFrame, role_columns: list, 
+                 output_subfolder_base: str, reports_folder_path: str):
         """
-        Create and save box plots for feature percentage distribution.
+        Initialize the BoxPlots interface.
+
+        Args:
+            trend_df (pd.DataFrame): DataFrame with trend data.
+            monthly_trend_df (pd.DataFrame): DataFrame with monthly trend data.
+            role_columns (list): List of columns (features) to visualize.
+            output_subfolder_base (str): Base name for the output subfolder.
+            reports_folder_path (str): Path to store the report files.
+        """
+        self.trend_df = trend_df
+        self.monthly_trend_df = monthly_trend_df
+        self.role_columns = role_columns
+        self.output_subfolder_base = output_subfolder_base
+        self.reports_folder_path = reports_folder_path
+
+    @abstractmethod
+    def plot_distribution(self):
+        """
+        Abstract method to create and save box plots based on the trends.
+
+        Returns:
+            None: Saves box plot visualizations to the output folder.
         """
         pass
 
@@ -188,75 +299,77 @@ class ITopicAssignment(ABC):
 
 class ITopicModel(ABC):
     """
-    Abstract base class for topic modeling.
-    
-    This class defines the interface for performing topic modeling, which includes fitting a model, 
-    displaying extracted topics, and calculating various metrics to evaluate the quality of the topics.
+    Interface for Topic Modeling classes.
     """
-    
+
+    @abstractmethod
+    def __init__(self, n_topics, data, stopword_files, num_top_words, epochs, output_subfolder):
+        """
+        Initialize the topic model with necessary parameters.
+
+        Args:
+            n_topics (int): Number of topics to extract.
+            data (dict): Dataset containing the descriptions to process.
+            stopword_files (list): File paths to stopword lists.
+            num_top_words (int): Number of top words per topic to display.
+            epochs (int): Maximum number of iterations for the model.
+            output_subfolder (str): Directory for saving output files.
+        """
+        pass
+
     @abstractmethod
     def fit(self):
         """
-        Fits the topic model to the data.
-        
-        This method should implement the process of training a topic modeling algorithm, such as LDA or NMF.
+        Fit the model to the data.
         """
         pass
 
     @abstractmethod
     def display_topics(self):
         """
-        Displays the extracted topics from the fitted model.
-        
-        This method should output or return the topics discovered by the model in an interpretable format.
+        Display the top words for each topic.
         """
         pass
 
     @abstractmethod
-    def calculate_topic_coherence(self) -> float:
+    def calculate_topic_coherence(self):
         """
-        Calculates the topic coherence score for the fitted model.
-        
-        Topic coherence measures the interpretability and quality of topics based on the co-occurrence of words.
-        
-        Returns:
-            float: A score representing the coherence of the topics.
+        Calculate the topic coherence score.
         """
         pass
 
     @abstractmethod
-    def calculate_topic_diversity(self) -> float:
+    def calculate_topic_diversity(self):
         """
-        Calculates the topic diversity score for the fitted model.
-        
-        Topic diversity assesses how distinct the topics are from each other.
-        
-        Returns:
-            float: A score representing the diversity of the topics.
+        Calculate the topic diversity score.
         """
         pass
 
     @abstractmethod
-    def calculate_silhouette_score(self) -> float:
+    def calculate_silhouette_score(self):
         """
-        Calculates the silhouette score for clustering the topics.
-        
-        The silhouette score measures how similar each point is to its own cluster compared to other clusters.
-        
-        Returns:
-            float: A score indicating the quality of clustering.
+        Calculate the silhouette score for clustering.
         """
         pass
 
     @abstractmethod
-    def calculate_cosine_similarity(self) -> float:
+    def evaluate_clustering_stability(self, num_runs):
         """
-        Calculates the cosine similarity between the topics.
-        
-        Cosine similarity measures how similar the topics are based on their word distributions.
-        
-        Returns:
-            float: A score representing the cosine similarity between topics.
+        Evaluate clustering stability by running multiple trials.
+        """
+        pass
+
+    @abstractmethod
+    def calculate_cosine_similarity(self):
+        """
+        Calculate pairwise cosine similarity between topics.
+        """
+        pass
+
+    @abstractmethod
+    def calculate_topic_percentage(self):
+        """
+        Calculate the percentage contribution of each topic.
         """
         pass
 
