@@ -34,18 +34,23 @@ class DatasetRegistry(IDatasetRegistry):
         self.project_name = project_name
         self.BASE_FOLDER = BASE_FOLDER
         self.REGISTRY_FILE = REGISTRY_FILE
-
-    def save_dataset(self, dataset, project_name):
+    
+    def save_dataset(self, dataset, dataset_name, project_name):
         """
-        Save a dataset to the specified project folder and update the registry file.
+        Save a dataset (pandas DataFrame) to the specified project folder and update the registry file.
 
         This method creates the project folder if it doesn't exist, saves the uploaded dataset
-        file into the folder, and updates the registry CSV file with metadata such as
+        as a CSV file into the folder, and updates the registry CSV file with metadata such as
         dataset name, location, project name, and timestamps.
+
+        Args:
+            dataset (pd.DataFrame): The dataset to save.
+            dataset_name (str): The name of the dataset file (e.g., "data.csv").
+            project_name (str): The name of the project folder.
 
         Returns:
             str: A success message if the dataset is saved successfully, or an error message
-                 if something goes wrong.
+                if something goes wrong.
         """
         project_folder = Path(self.BASE_FOLDER) / project_name
 
@@ -54,16 +59,14 @@ class DatasetRegistry(IDatasetRegistry):
             project_folder.mkdir(parents=True, exist_ok=True)
 
             # Check if the dataset already exists
-            file_path = project_folder / dataset.name
+            file_path = project_folder / dataset_name
             if file_path.exists():
-                return f"Error: A dataset with the name {dataset.name} already exists."
+                return f"Error: A dataset with the name {dataset_name} already exists."
 
-            # Save the dataset
-            with open(file_path, "wb") as f:
-                shutil.copyfileobj(dataset, f)
+            # Save the dataset as a CSV file
+            dataset.to_csv(file_path, index=False)
 
             # Prepare data for the registry entry
-            dataset_name = dataset.name
             original_location = str(file_path)
             last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             time_of_creation = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -81,7 +84,7 @@ class DatasetRegistry(IDatasetRegistry):
                 "id": next_id,
                 "dataset_name": dataset_name,
                 "original_location": original_location,
-                "project_name": self.project_name,
+                "project_name": project_name,
                 "last_update": last_update,
                 "time_of_creation": time_of_creation
             }
@@ -91,37 +94,6 @@ class DatasetRegistry(IDatasetRegistry):
             return f"Dataset saved successfully in {file_path} and registered."
         except Exception as e:
             return f"Error: {e}"
-
-    ''' def remove_dataset(self, project_to_remove, dataset_to_remove):
-        """
-        Remove a dataset file from the project folder and delete its registry entry.
-
-        This method checks if the dataset file exists in the specified project folder,
-        removes the file, and updates the registry CSV file to exclude the dataset entry.
-
-        Returns:
-            str: A success message if the dataset is removed successfully, or an error message
-                 if the dataset file is not found or another issue occurs.
-        """
-        project_folder = Path(self.BASE_FOLDER) / project_to_remove
-        dataset_path = project_folder / dataset_to_remove
-
-        try:
-            if dataset_path.exists():
-                # Remove the dataset file
-                os.remove(dataset_path)
-
-                # Remove the entry from the registry
-                if self.REGISTRY_FILE.exists():
-                    registry_df = pd.read_csv(self.REGISTRY_FILE)
-                    registry_df = registry_df[(registry_df["dataset_name"] != self.dataset_name) | (registry_df["project_name"] != self.project_name)]
-                    registry_df.to_csv(self.REGISTRY_FILE, index=False)
-
-                return f"Dataset {self.dataset_name} removed successfully."
-            else:
-                return f"Error: Dataset {self.dataset_name} not found."
-        except Exception as e:
-            return f"Error: {e}" '''
     
     def remove_dataset(self, project_to_remove, dataset_to_remove):
         """

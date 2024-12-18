@@ -1,11 +1,17 @@
-from modules import DatasetRegistry
+from modules import DatasetRegistry, DataFormatter
+from interfaces import IDataFormatter
 from config import Config
+
+import pandas as pd
 
 # Load configuration
 configs = Config()
 
 base_folder = configs.base_folder
 registry_file = configs.registry_file
+
+column_renames = configs.COLUMN_RENAMES
+special_handlings_columns = configs.SPECIAL_HANDLINGS_COLUMNS
 
 class DataRegistryManager():
     """
@@ -39,7 +45,24 @@ class DataRegistryManager():
         Returns:
             bool: True if the dataset was successfully saved, otherwise False.
         """
-        return self.dataset_registry.save_dataset(dataset, project_name)
+        if dataset is not None:
+            # Load the dataset
+            if dataset.name.endswith('.csv'):
+                df = pd.read_csv(dataset)
+            elif dataset.name.endswith('.xlsx'):
+                df = pd.read_excel(dataset)
+            elif dataset.name.endswith('.json'):
+                df = pd.read_json(dataset)
+            else:
+                return False  # Unsupported file format
+
+            data_formatter: IDataFormatter = DataFormatter(df, column_renames, special_handlings_columns)
+
+            # Rename certain columns
+            df = data_formatter.rename_columns()
+
+            dataset_name = dataset.name
+            return self.dataset_registry.save_dataset(df, dataset_name, project_name)
 
     def remove_dataset(self, project_to_remove, dataset_to_remove):
         """
