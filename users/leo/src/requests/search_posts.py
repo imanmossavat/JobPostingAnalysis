@@ -70,3 +70,21 @@ def build_search_posts_request(
             return invalid_request
 
     return PostsSearchValidRequest(filters=filters)
+
+
+def build_semantic_search_request(filters=None):
+    accepted_filters = ["text", "model_id", "threshold"]
+    invalid_request = PostsSearchInvalidRequest()
+    if filters is not None:
+        if not isinstance(filters, Mapping):
+            invalid_request.add_error("filters", "Is not iterable")
+            return invalid_request
+
+        for key in filters.keys():
+            if key not in accepted_filters:
+                invalid_request.add_error(
+                    "filters", "Key {} cannot be used".format(key)
+                )
+        if invalid_request.has_errors():
+            return invalid_request
+    return PostsSearchValidRequest(filters=filters)
