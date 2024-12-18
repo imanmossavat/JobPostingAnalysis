@@ -28,9 +28,25 @@ class Config():
 
         self._base_folder = registry_folder_path
 
-        # self._registry_file = Path(registry_folder_path) / "registry.csv"
-
         self._registry_file = registry_file_path
+
+        # Column renames
+
+        self._COLUMN_RENAMES = {
+            'Id': 'job_id',
+            'Description': 'description',
+            'Title': 'title',
+            'Language': 'language',
+            'CreatedAt': 'original_listed_time',
+            'Compensation': 'med_salary_monthly',
+            'med_salary': 'med_salary_monthly',
+            'AddressId': 'location'
+        }
+
+        # Define special handling for 'AddressId' -> 'location' to create 'company_name'
+        self._SPECIAL_HANDLINGS_COLUMNS = {
+            'AddressId': 'company_name'
+        }
 
     # Getters
     @property
@@ -76,79 +92,87 @@ class Config():
     @property
     def registry_file(self):
         return self._registry_file
+    
+    @property
+    def COLUMN_RENAMES(self):
+        return self._COLUMN_RENAMES
+
+    @property
+    def SPECIAL_HANDLINGS_COLUMNS(self):
+        return self._SPECIAL_HANDLINGS_COLUMNS
 
     # Setters
-    @n_topics.__setattr__
+    @n_topics.setter
     def n_topics(self, value):
         if isinstance(value, int) and value > 0:
             self._n_topics = value
         else:
             raise ValueError("n_topics must be a positive integer.")
 
-    @num_top_words.__setattr__
+    @num_top_words.setter
     def num_top_words(self, value):
         if isinstance(value, int) and value > 0:
             self._num_top_words = value
         else:
             raise ValueError("num_top_words must be a positive integer.")
 
-    @epochs.__setattr__
+    @epochs.setter
     def epochs(self, value):
         if isinstance(value, int) and value > 0:
             self._epochs = value
         else:
             raise ValueError("epochs must be a positive integer.")
 
-    @csv_dataset.__setattr__
+    @csv_dataset.setter
     def csv_dataset(self, value):
         if isinstance(value, str):
             self._csv_dataset = value
         else:
             raise ValueError("csv_dataset must be a string.")
 
-    @topics_file.__setattr__
+    @topics_file.setter
     def topics_file(self, value):
         if isinstance(value, str):
             self._topics_file = value
         else:
             raise ValueError("topics_file must be a string.")
 
-    @reports_folder_path.__setattr__
+    @reports_folder_path.setter
     def reports_folder_path(self, value):
         if isinstance(value, str):
             self._reports_folder_path = value
         else:
             raise ValueError("reports_folder_path must be a string.")
 
-    @name_of_topics.__setattr__
+    @name_of_topics.setter
     def name_of_topics(self, value):
         if isinstance(value, str):
             self._name_of_topics = value
         else:
             raise ValueError("name_of_topics must be a string.")
 
-    @stopword_file_names.__setattr__
+    @stopword_file_names.setter
     def stopword_file_names(self, value):
         if isinstance(value, list) and all(isinstance(item, str) for item in value):
             self._stopword_file_names = value
         else:
             raise ValueError("stopword_file_names must be a list of strings.")
         
-    @text_column.__setattr__
+    @text_column.setter
     def text_column(self, value):
         if isinstance(value, str):
             self._text_column = value
         else:
             raise ValueError("text_column must be a string.")
         
-    @base_folder.__setattr__
+    @base_folder.setter
     def base_folder(self, value):
         if isinstance(value, str):
             self._base_folder = value
         else:
             raise ValueError("base_folder must be a string.")
         
-    @registry_file.__setattr__
+    @registry_file.setter
     def registry_file(self, value):
         if isinstance(value, str):
             self._registry_file = Path(value)  # Convert string to Path
@@ -156,6 +180,28 @@ class Config():
             self._registry_file = value  # Directly accept Path objects
         else:
             raise ValueError("registry_file must be a string or Path object.")
+        
+    @COLUMN_RENAMES.setter
+    def COLUMN_RENAMES(self, value):
+        if isinstance(value, dict):
+            # Ensure that the dictionary has valid keys and values
+            if all(isinstance(k, str) and isinstance(v, str) for k, v in value.items()):
+                self._COLUMN_RENAMES = value
+            else:
+                raise ValueError("COLUMN_RENAMES must be a dictionary with string keys and values.")
+        else:
+            raise ValueError("COLUMN_RENAMES must be a dictionary.")
+
+    @SPECIAL_HANDLINGS_COLUMNS.setter
+    def SPECIAL_HANDLINGS_COLUMNS(self, value):
+        if isinstance(value, dict):
+            # Ensure that the dictionary has valid keys and values
+            if all(isinstance(k, str) and isinstance(v, str) for k, v in value.items()):
+                self._SPECIAL_HANDLINGS_COLUMNS = value
+            else:
+                raise ValueError("SPECIAL_HANDLINGS_COLUMNS must be a dictionary with string keys and values.")
+        else:
+            raise ValueError("SPECIAL_HANDLINGS_COLUMNS must be a dictionary.")
 
     # Method to return the topic modeling input variables
     def topic_modeling_input_variables(self):

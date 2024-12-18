@@ -120,6 +120,35 @@ class IDatasetRegistry(ABC):
         """
         pass
 
+class IDataFormatter(ABC):
+    """
+    Interface for DataFormatter. This defines the methods required for 
+    formatting and transforming a DataFrame.
+    """
+
+    @abstractmethod
+    def __init__(self, df: pd.DataFrame, column_renames: dict, special_handlings_columns: dict):
+        """
+        Initializes the DataFormatter with a DataFrame.
+
+        Args:
+            df (pd.DataFrame): The dataset to be formatted.
+            column_renames (dict): Dictionary mapping old column names to new names.
+            special_handlings_columns (dict): Dictionary of columns that require special handling.
+        """
+        self.df = df
+        self.column_renames = column_renames
+        self.special_handlings_columns = special_handlings_columns
+
+    @abstractmethod
+    def rename_columns(self) -> pd.DataFrame:
+        """
+        Renames specific columns in the DataFrame and adds new columns where applicable.
+        Returns:
+            pd.DataFrame: The modified DataFrame.
+        """
+        pass
+
 class IFeatureExtractor(ABC):
     """
     Interface for feature extraction implementations.

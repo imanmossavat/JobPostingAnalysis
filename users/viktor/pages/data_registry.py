@@ -1,5 +1,4 @@
 import streamlit as st
-# from managers.data_registry_manager import save_dataset, remove_dataset, get_existing_projects, get_datasets_in_project
 from managers import DataRegistryManager
 
 st.title("Dataset Registry Manager")
@@ -17,7 +16,7 @@ if project_name == "":
     project_name = st.text_input("Or enter a new project name")
 
 # File uploader
-dataset = st.file_uploader("Upload your dataset", type=["csv", "xlsx", "json", "txt"])
+dataset = st.file_uploader("Upload your dataset", type=["csv", "xlsx", "json"])
 
 # File name input
 file_name = st.text_input("Enter the file name (optional)", value=dataset.name if dataset else "")
