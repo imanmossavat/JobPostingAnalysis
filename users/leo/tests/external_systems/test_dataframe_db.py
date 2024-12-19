@@ -38,43 +38,44 @@ def test_repository_list_without_parameters(jobs_df):
     repo = DataFrameRepo(jobs_df)
     jobs_expected = [JobPost.from_dict(JOB_POST_1), JobPost.from_dict(JOB_POST_2)]
     jobs_actual = repo.list()
-    assert len(jobs_actual) == len(jobs_expected)
-    for i in range(len(jobs_actual)):
-        assert jobs_actual[i].job_id == jobs_expected[i].job_id
-        assert jobs_actual[i].title == jobs_expected[i].title
-        assert jobs_actual[i].description == jobs_expected[i].description
-        assert jobs_actual[i].company_name == jobs_expected[i].company_name
-        assert jobs_actual[i].location == jobs_expected[i].location
+    assert len(jobs_actual.jobs) == len(jobs_expected)
+    for i in range(len(jobs_actual.jobs)):
+        assert jobs_actual.jobs[i].job_id == jobs_expected[i].job_id
+        assert jobs_actual.jobs[i].title == jobs_expected[i].title
+        assert jobs_actual.jobs[i].description == jobs_expected[i].description
+        assert jobs_actual.jobs[i].company_name == jobs_expected[i].company_name
+        assert jobs_actual.jobs[i].location == jobs_expected[i].location
         assert (
-            jobs_actual[i].original_listed_time == jobs_expected[i].original_listed_time
+            jobs_actual.jobs[i].original_listed_time
+            == jobs_expected[i].original_listed_time
         )
-        assert jobs_actual[i].language == jobs_expected[i].language
-        assert jobs_actual[i].skills == jobs_expected[i].skills
-        assert jobs_actual[i].industries == jobs_expected[i].industries
+        assert jobs_actual.jobs[i].language == jobs_expected[i].language
+        assert jobs_actual.jobs[i].skills == jobs_expected[i].skills
+        assert jobs_actual.jobs[i].industries == jobs_expected[i].industries
 
 
 def test_repository_list_with_industries_in_filter(jobs_df):
     repo = DataFrameRepo(jobs_df)
     filters = {"industries": ["Technology"]}
     jobs_searched = repo.list(filters)
-    assert len(jobs_searched) == 1
-    assert jobs_searched[0].industries == "Technology, Software"
+    assert len(jobs_searched.jobs) == 1
+    assert jobs_searched.jobs[0].industries == "Technology, Software"
 
 
 def test_repository_list_with_skills_in_filter(jobs_df):
     repo = DataFrameRepo(jobs_df)
     filters = {"skills": ["Python"]}
     jobs_searched = repo.list(filters)
-    assert len(jobs_searched) == 1
-    assert jobs_searched[0].skills == "Python, Java, C++"
+    assert len(jobs_searched.jobs) == 1
+    assert jobs_searched.jobs[0].skills == "Python, Java, C++"
 
 
 def test_repository_list_with_include_company_filter(jobs_df):
     repo = DataFrameRepo(jobs_df)
     filters = {"skills": ["Python"], "include_companies": ["company2"]}
     jobs_searched = repo.list(filters)
-    assert len(jobs_searched) == 2
-    assert jobs_searched[0].skills == "Python, Java, C++"
-    assert jobs_searched[0].company_name == "company1"
-    assert jobs_searched[1].company_name == "company2"
-    assert jobs_searched[1].skills == "Java, C++"
+    assert len(jobs_searched.jobs) == 2
+    assert jobs_searched.jobs[0].skills == "Python, Java, C++"
+    assert jobs_searched.jobs[0].company_name == "company1"
+    assert jobs_searched.jobs[1].company_name == "company2"
+    assert jobs_searched.jobs[1].skills == "Java, C++"

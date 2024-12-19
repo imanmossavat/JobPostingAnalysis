@@ -31,7 +31,7 @@ class DataFrameRepo(Repository):
             >>> repo.list({'industries': ['IT'], 'skills': ['Python']})
         """
         if not filters:
-            return JobPostSample.from_df(self.data).jobs
+            return JobPostSample.from_df(self.data)
         jobs = self.data
         if "industries" in filters:
             selected_industries = filters["industries"]
@@ -53,4 +53,4 @@ class DataFrameRepo(Repository):
                 [jobs, self.data[self.data["company_name"].isin(selected_companies)]]
             ).drop_duplicates(subset="job_id", keep="first")
 
-        return JobPostSample.from_df(jobs).jobs
+        return JobPostSample.from_df(jobs)

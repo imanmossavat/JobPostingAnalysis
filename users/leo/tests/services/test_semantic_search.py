@@ -130,7 +130,7 @@ def test_semantic_search_without_parameters(jobs_sample, embeddings_sample, mode
     )
 
 
-def test_semantic_search_with_filters(jobs_sample, embeddings_sample, models_df):
+def test_semantic_search_with_filters(jobs_sample, models_df):
     jobs_repo = mock.Mock()
     embeddings_repo = mock.Mock()
     jobs_repo.list.return_value = jobs_sample
