@@ -11,12 +11,12 @@ from src.entities.embedding_sample import EmbeddingSample
 
 
 def semantic_search(repo, embeddings_repo, embedder, models_repo, request):
-    if not request:
+    if not request:# filtering request, nothing is a valid request
 
         return build_response_from_invalid_request(request)
 
     try:
-        if not request.filters:
+        if not request.filters: # nothing is a valid request
             jobs, embeddings = repo.list(filters=None), embeddings_repo.list(
                 filters=None
             )
