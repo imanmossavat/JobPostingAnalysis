@@ -1,23 +1,24 @@
-"""
-This module provides validation and request building functionality for job post searches.
-It includes:
+"""Module providing validation and request building functionality for job post searches.
+
+This module includes:
 - PostsSearchInvalidRequest: For handling and accumulating validation errors
 - PostsSearchValidRequest: For representing valid search requests
 - build_search_posts_request: Builder function that validates and constructs search requests
+- build_semantic_search_request: Builder function for semantic search validation
 """
 
 from collections.abc import Mapping
-from typing import Optional, Dict, Union, Any
+from typing import Optional, Dict, Union, Any, List
 
 
 class PostsSearchInvalidRequest:
     def __init__(self):
-        self.errors = []
+        self.errors: List[Dict[str, str]] = []
 
-    def add_error(self, parameter, message):
+    def add_error(self, parameter: str, message: str) -> None:
         self.errors.append({"parameter": parameter, "message": message})
 
-    def has_errors(self):
+    def has_errors(self) -> bool:
         return len(self.errors) > 0
 
     def __bool__(self):
@@ -72,7 +73,26 @@ def build_search_posts_request(
     return PostsSearchValidRequest(filters=filters)
 
 
-def build_semantic_search_request(filters=None):
+def build_semantic_search_request(
+    filters: Optional[Dict[str, Any]] = None
+) -> Union[PostsSearchValidRequest, PostsSearchInvalidRequest]:
+    """Build and validate a semantic search request.
+
+    Args:
+        filters: Optional dictionary containing search filters.
+                Accepted keys are 'text', 'model_id', and 'threshold'.
+
+    Returns:
+        PostsSearchValidRequest if validation passes, or
+        PostsSearchInvalidRequest if validation fails with errors.
+
+    Example:
+        >>> request = build_semantic_search_request({'text': 'python', 'model_id': 1})
+        >>> if request:
+        >>>     # handle valid request
+        >>> else:
+        >>>     # handle invalid request errors
+    """
     accepted_filters = ["text", "model_id", "threshold"]
     invalid_request = PostsSearchInvalidRequest()
     if filters is not None:

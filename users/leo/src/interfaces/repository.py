@@ -4,13 +4,13 @@ for repository implementations that handle job post data.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any, List
-from src.entities.job_post import JobPost
+from typing import Optional, Dict, Any
+from src.entities.job_post_sample import JobPostSample
 
 
 class Repository(ABC):
     @abstractmethod
-    def list(self, filters: Optional[Dict[str, Any]] = None) -> List[JobPost]:
+    def list(self, filters: Optional[Dict[str, Any]] = None) -> JobPostSample:
         """
         Retrieve a list of job posts, optionally filtered by specified criteria.
 
@@ -18,6 +18,6 @@ class Repository(ABC):
             filters: Optional dictionary containing filter criteria
 
         Returns:
-            List of JobPost objects matching the filter criteria
+            A JobPostSample object, holding JobPost objects matching the filter criteria
         """
         pass

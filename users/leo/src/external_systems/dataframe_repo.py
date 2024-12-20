@@ -6,15 +6,14 @@ The DataFrameRepo class provides methods to list and filter job posts stored in 
 import pandas as pd
 from src.interfaces.repository import Repository
 from src.entities.job_post_sample import JobPostSample
-from typing import Optional, Dict, Any, List
-from src.entities.job_post import JobPost
+from typing import Optional, Dict, Any
 
 
 class DataFrameRepo(Repository):
     def __init__(self, data: pd.DataFrame):
         self.data = data
 
-    def list(self, filters: Optional[Dict[str, Any]] = None) -> List[JobPost]:
+    def list(self, filters: Optional[Dict[str, Any]] = None) -> JobPostSample:
         """
         Retrieve a list of job posts from the DataFrame, optionally filtered by specified criteria.
 
@@ -25,7 +24,7 @@ class DataFrameRepo(Repository):
                 - 'include_companies': List of company names to include
 
         Returns:
-            List of JobPost objects matching the filter criteria
+            A JobPostSample object, holding JobPost objects matching the filter criteria
 
         Example:
             >>> repo.list({'industries': ['IT'], 'skills': ['Python']})

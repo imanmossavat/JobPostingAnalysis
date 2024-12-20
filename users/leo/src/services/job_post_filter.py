@@ -1,76 +1,64 @@
-"""
-This module provides job post filtering functionality through the JobPostFilter class.
-It handles different types of job searches including keyword-based and semantic-based filtering,
-while managing successful and failed responses appropriately.
+"""Module providing job post filtering functionality.
+
+This module implements the JobPostFilter service class which handles:
+- Keyword-based and semantic-based job post filtering
+- Repository interaction for fetching job posts
+- Response handling for successful and failed operations
 """
 
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from src.responses import (
     ResponseSuccess,
     ResponseFailure,
     ResponseTypes,
     build_response_from_invalid_request,
 )
-from src.entities.job_post import JobPost
+from src.entities.job_post_sample import JobPostSample
 from src.interfaces.repository import Repository
 from src.requests.search_posts import PostsSearchValidRequest
 
 
 class JobPostFilter:
+    """Service class for filtering and searching job posts."""
+
     def __init__(self):
         pass
 
     def _get_jobs_matching_filters(
         self, repo: Repository, filters: Optional[Dict[str, Any]] = None
-    ) -> List[JobPost]:
-        """
-        Retrieves jobs that match the specified filters.
+    ) -> JobPostSample:
+        """Retrieve jobs from repository based on filter criteria.
 
         Args:
-            repo: Repository instance to fetch jobs from
-            filters: Dictionary containing filter criteria
+            repo: Repository interface implementation for accessing job posts
+            filters: Optional filter criteria to apply to the job search
 
         Returns:
-            List of JobPost objects matching the filters
+            JobPostSample containing the filtered job posts
         """
         filtered_posts = repo.list(filters=filters)
         return filtered_posts
 
-    def _get_similar_jobs(
-        self, repo: Repository, request: PostsSearchValidRequest
-    ) -> List[JobPost]:
-        """
-        Retrieves jobs that are semantically similar based on the request.
-
-        Args:
-            repo: Repository instance to fetch jobs from
-            request: Valid search request containing semantic search parameters
-
-        Returns:
-            List of JobPost objects that are semantically similar
-        """
-        similar_posts = repo.list()
-        return similar_posts
-
     def search_jobs(
         self, repo: Repository, request: PostsSearchValidRequest
     ) -> ResponseSuccess | ResponseFailure:
-        """
-        Main method to search for jobs based on the provided request.
+        """Search for jobs using keyword or semantic-based filtering.
 
         Args:
-            repo: Repository instance to fetch jobs from
-            request: Valid search request containing search parameters
+            repo: Repository interface implementation for accessing job posts
+            request: Validated search request containing filter parameters
 
         Returns:
-            ResponseSuccess containing matching jobs if successful,
-            ResponseFailure if an error occurs
+            ResponseSuccess with matching jobs if successful, or
+            ResponseFailure with error details if the operation fails
 
         Example:
             >>> filter_service = JobPostFilter()
-            >>> result = filter_service.search_jobs(repo, valid_request)
-            >>> if result:
-            >>>     jobs = result.value
+            >>> response = filter_service.search_jobs(repo, valid_request)
+            >>> if bool(response):
+            >>>     jobs = response.value  # Process successful response
+            >>> else:
+            >>>     error = response.message  # Handle error case
         """
         if not request:
             return build_response_from_invalid_request(request)
@@ -83,9 +71,6 @@ class JobPostFilter:
                 jobs_from_search = self._get_jobs_matching_filters(
                     repo, filters=request.filters.get("keyword_search")
                 )
-                return ResponseSuccess(jobs_from_search)
-            if "semantic_search" in request.filters:
-                jobs_from_search = self._get_similar_jobs(repo, request)
                 return ResponseSuccess(jobs_from_search)
             return ResponseFailure(
                 ResponseTypes.PARAMETERS_ERROR,
