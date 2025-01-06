@@ -3,6 +3,11 @@ import pandas as pd
 from typing import List, Dict
 import numpy as np
 
+class IEmbedder(ABC):
+    @abstractmethod
+    def generate_embeddings():
+        pass
+
 class IWordCloudGenerator(ABC):
     """
     Interface for WordCloudGenerator classes.

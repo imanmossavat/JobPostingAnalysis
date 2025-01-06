@@ -1,5 +1,4 @@
 import os
-import shutil
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
@@ -7,130 +6,96 @@ from interfaces import IDatasetRegistry
 
 class DatasetRegistry(IDatasetRegistry):
     """
-    A class to manage datasets in a structured way. It handles saving datasets,
-    removing datasets, retrieving existing projects, and listing datasets in a project.
-
-    Attributes:
-        dataset: The dataset file object to be saved or removed.
-        project_name (str): The name of the project folder.
-        dataset_name (str): The name of the dataset file.
-        BASE_FOLDER (str): The base directory where projects and datasets are stored.
-        REGISTRY_FILE (Path): Path to the registry file (CSV) for tracking datasets.
+    A class to manage datasets and database connections in a structured way.
     """
 
     def __init__(self, dataset, project_name, dataset_name, BASE_FOLDER, REGISTRY_FILE):
-        """
-        Initialize the DatasetRegistry class.
-
-        Args:
-            dataset: The dataset file object to be saved or removed.
-            project_name (str): The name of the project folder.
-            dataset_name (str): The name of the dataset file.
-            BASE_FOLDER (str): The base directory where projects and datasets are stored.
-            REGISTRY_FILE (Path): Path to the registry file (CSV) for tracking datasets.
-        """
         self.dataset = dataset
         self.dataset_name = dataset_name
         self.project_name = project_name
         self.BASE_FOLDER = BASE_FOLDER
         self.REGISTRY_FILE = REGISTRY_FILE
     
-    def save_dataset(self, dataset, dataset_name, project_name):
+    def save_dataset(self, dataset, dataset_name, project_name, db_connection=None):
         """
-        Save a dataset (pandas DataFrame) to the specified project folder and update the registry file.
-
-        This method creates the project folder if it doesn't exist, saves the uploaded dataset
-        as a CSV file into the folder, and updates the registry CSV file with metadata such as
-        dataset name, location, project name, and timestamps.
+        Save a dataset or database connection to the project folder and update the registry.
 
         Args:
-            dataset (pd.DataFrame): The dataset to save.
-            dataset_name (str): The name of the dataset file (e.g., "data.csv").
-            project_name (str): The name of the project folder.
-
-        Returns:
-            str: A success message if the dataset is saved successfully, or an error message
-                if something goes wrong.
+            dataset: The dataset to save (can be a file or DataFrame).
+            dataset_name (str): The name of the dataset or connection file.
+            project_name (str): The project folder name.
+            db_connection (dict): Optional database connection details.
         """
         project_folder = Path(self.BASE_FOLDER) / project_name
 
         try:
-            # Create the project folder if it doesn't exist
+            # Create project folder if it doesn't exist
             project_folder.mkdir(parents=True, exist_ok=True)
 
-            # Check if the dataset already exists
-            file_path = project_folder / dataset_name
-            if file_path.exists():
-                return f"Error: A dataset with the name {dataset_name} already exists."
+            # Check if it's a database connection
+            if db_connection:
+                # Save connection details to a file
+                connection_file = project_folder / f"{dataset_name}_connection.json"
+                if connection_file.exists():
+                    return f"Error: A connection file with the name {dataset_name}_connection.json already exists."
 
-            # Save the dataset as a CSV file
-            dataset.to_csv(file_path, index=False)
+                # Save connection details as JSON
+                pd.DataFrame([db_connection]).to_json(connection_file, orient='records', lines=True)
+                dataset_path = connection_file
+            else:
+                # Save the dataset file (e.g., CSV)
+                file_path = project_folder / dataset_name
+                if file_path.exists():
+                    return f"Error: A dataset with the name {dataset_name} already exists."
 
-            # Prepare data for the registry entry
-            original_location = str(file_path)
-            last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            time_of_creation = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                dataset.to_csv(file_path, index=False)
+                dataset_path = file_path
 
-            # Load the registry file or create a new one
+            # Update registry file
             if self.REGISTRY_FILE.exists():
                 registry_df = pd.read_csv(self.REGISTRY_FILE)
                 next_id = registry_df["id"].max() + 1 if not registry_df.empty else 1
             else:
-                registry_df = pd.DataFrame(columns=["id", "dataset_name", "original_location", "project_name", "last_update", "time_of_creation"])
+                registry_df = pd.DataFrame(columns=["id", "dataset_name", "original_location", "project_name", "last_update", "time_of_creation", "is_database"])
                 next_id = 1
 
-            # Add the new entry
             new_entry = {
                 "id": next_id,
                 "dataset_name": dataset_name,
-                "original_location": original_location,
+                "original_location": str(dataset_path),
                 "project_name": project_name,
-                "last_update": last_update,
-                "time_of_creation": time_of_creation
+                "last_update": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "time_of_creation": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "is_database": bool(db_connection)
             }
             registry_df = pd.concat([registry_df, pd.DataFrame([new_entry])], ignore_index=True)
             registry_df.to_csv(self.REGISTRY_FILE, index=False)
 
-            return f"Dataset saved successfully in {file_path} and registered."
+            return f"Dataset or connection saved successfully as {dataset_path}."
         except Exception as e:
             return f"Error: {e}"
-    
+
     def remove_dataset(self, project_to_remove, dataset_to_remove):
         """
-        Remove a dataset file from the project folder and delete its registry entry.
-
-        Args:
-            project_to_remove (str): The name of the project folder.
-            dataset_to_remove (str): The name of the dataset file.
-
-        Returns:
-            str: Success message or error message.
+        Remove a dataset or database connection file and update the registry.
         """
         project_folder = Path(self.BASE_FOLDER) / project_to_remove
         dataset_path = project_folder / dataset_to_remove
 
         try:
             if dataset_path.exists():
-                # Remove the dataset file
                 os.remove(dataset_path)
-
-                # Update the registry file
                 if self.REGISTRY_FILE.exists():
                     registry_df = pd.read_csv(self.REGISTRY_FILE)
-
-                    # Filter out the specific entry
                     registry_df = registry_df[~((registry_df["dataset_name"] == dataset_to_remove) & 
-                                            (registry_df["project_name"] == project_to_remove))]
-
-                    # Save the updated registry
+                                                (registry_df["project_name"] == project_to_remove))]
                     registry_df.to_csv(self.REGISTRY_FILE, index=False)
-
                 return f"Dataset {dataset_to_remove} removed successfully from project {project_to_remove}."
             else:
                 return f"Error: Dataset {dataset_to_remove} not found in project {project_to_remove}."
         except Exception as e:
             return f"Error: {e}"
-
+    
     def get_existing_projects(self):
         """
         Retrieve a list of existing projects (folders) in the base directory.

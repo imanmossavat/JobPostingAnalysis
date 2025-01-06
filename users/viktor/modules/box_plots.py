@@ -142,7 +142,7 @@ class BoxPlotsVisualizer(IBoxPlots):
         adjusted_trend_df.set_index('year_month', inplace=True)
 
         # Resample the data by 6-month intervals and calculate percentage distribution
-        semiannual_trends_df = adjusted_trend_df[self.role_columns].resample('6M').sum()
+        semiannual_trends_df = adjusted_trend_df[self.role_columns].resample('6ME').sum()
         semiannual_trends_percent_df = semiannual_trends_df.div(semiannual_trends_df.sum(axis=1), axis=0) * 100
 
         # Melt the data for plotting
@@ -159,7 +159,16 @@ class BoxPlotsVisualizer(IBoxPlots):
 
         # Create and save the box plot ordered by median
         plt.figure(figsize=(14, 8))
-        sns.boxplot(data=melted_data, x=self.name_of_topics, y='Percentage', order=feature_order_median, palette='tab20')
+        sns.boxplot(
+            data=melted_data,
+            x=self.name_of_topics,
+            y='Percentage',
+            order=feature_order_median,
+            palette='tab20',
+            hue=self.name_of_topics,
+            dodge=False,  # Avoid splitting the bars by hue
+            legend=False  # Suppress legend as it is redundant here
+        )
         plt.title(f'{self.name_of_topics} Percentages Distribution (Ordered by Median)', fontsize=16)
         plt.xticks(rotation=45, ha='right', fontsize=12)
         plt.tight_layout()
@@ -168,7 +177,16 @@ class BoxPlotsVisualizer(IBoxPlots):
 
         # Create and save the box plot ordered by mean
         plt.figure(figsize=(14, 8))
-        sns.boxplot(data=melted_data, x=self.name_of_topics, y='Percentage', order=feature_order_mean, palette='tab20')
+        sns.boxplot(
+            data=melted_data,
+            x=self.name_of_topics,
+            y='Percentage',
+            order=feature_order_mean,
+            palette='tab20',
+            hue=self.name_of_topics,
+            dodge=False,  # Avoid splitting the bars by hue
+            legend=False  # Suppress legend as it is redundant here
+        )
         plt.title(f'{self.name_of_topics} Percentages Distribution (Ordered by Mean)', fontsize=16)
         plt.xticks(rotation=45, ha='right', fontsize=12)
         plt.tight_layout()

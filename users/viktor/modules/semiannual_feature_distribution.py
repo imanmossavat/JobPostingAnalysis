@@ -39,13 +39,17 @@ class SemiannualFeatureDistributionPlotter(ISemiannualFeatureDistribution):
         Returns:
             str: File path to the saved plot image.
         """
+
+        # Ensure the output directory exists
+        # os.makedirs(self.output_subfolder, exist_ok=True)
+
         trend_df['month'] = trend_df['year_month'].dt.month
         adjusted_trend_df = trend_df.merge(monthly_trend_df, on='month', suffixes=('', '_monthly'))
 
         adjusted_trend_df['year_month'] = pd.to_datetime(adjusted_trend_df['year_month'])
         adjusted_trend_df.set_index('year_month', inplace=True)
 
-        semiannual_trends_df = adjusted_trend_df[self.role_columns].resample('6M').sum()
+        semiannual_trends_df = adjusted_trend_df[self.role_columns].resample('6ME').sum()
         semiannual_trends_percent_df = semiannual_trends_df.div(semiannual_trends_df.sum(axis=1), axis=0) * 100
 
         fig, ax = plt.subplots(figsize=(22, 14))

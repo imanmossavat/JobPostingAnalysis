@@ -3,7 +3,7 @@ import datetime
 import os
 import subprocess
 from docx import Document
-from interfaces.skill_knowledge_extractor import ISkillKnowledgeExtractor
+from interfaces import ISkillKnowledgeExtractor
 from transformers import pipeline
 from langdetect import detect, LangDetectException
 

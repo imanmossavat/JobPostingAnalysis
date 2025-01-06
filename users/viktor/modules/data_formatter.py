@@ -42,8 +42,11 @@ class DataFormatter(IDataFormatter):
         for old_name, new_name in self.column_renames.items():
             if old_name in self.df.columns:
                 rename_mapping[old_name] = new_name
+            else:
+                # Log or handle missing columns, for example by raising a warning or skipping
+                print(f"Warning: Column '{old_name}' not found in the DataFrame.")
 
-        # Apply renaming
+        # Apply renaming if there are any valid mappings
         if rename_mapping:
             self.df = self.df.rename(columns=rename_mapping)
         
@@ -51,5 +54,8 @@ class DataFormatter(IDataFormatter):
         for old_name, new_column in self.special_handlings_columns.items():
             if old_name in self.df.columns:
                 self.df[new_column] = self.df[old_name]
+            else:
+                # Handle missing columns for special processing
+                print(f"Warning: Column '{old_name}' for special handling not found in the DataFrame.")
 
         return self.df

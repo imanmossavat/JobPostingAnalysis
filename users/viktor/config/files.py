@@ -7,8 +7,12 @@ file_names = ["stop_words_custom.txt", "stop_words_dutch.txt", "stop_words_engli
 # Get the current directory
 current_directory = os.getcwd()
 
+config_directory = os.path.join(current_directory, 'config')
+
+stopwords_folder_name = 'stopwords'
+
 # Find the full paths of the files in the current folder
-stopword_file_names = [os.path.join(current_directory, file) for file in file_names if os.path.isfile(os.path.join(current_directory, file))]
+stopword_file_names = [os.path.join(config_directory, stopwords_folder_name, file) for file in file_names if os.path.isfile(os.path.join(config_directory, stopwords_folder_name, file))]
 
 # Define the path to the 'data' folder inside the current directory
 data_folder = os.path.join(current_directory, 'data')

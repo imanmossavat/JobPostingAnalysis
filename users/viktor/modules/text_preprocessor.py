@@ -1,4 +1,3 @@
-from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from interfaces import ITextPreprocessor
 
@@ -29,10 +28,13 @@ class TextPreprocessor(ITextPreprocessor):
         Returns:
             set: A set containing all stopwords.
         """
-        stopwords_set = set(stopwords.words('english'))
+        stopwords_set = set()
+        
         for file in stopword_files:
             with open(file, 'r', encoding='utf-8') as f:
-                stopwords_set.update(f.read().splitlines())
+                # Read and strip each line of whitespace, and add to the stopwords set
+                custom_stopwords = {line.strip() for line in f if line.strip()}  # Ensures no empty lines
+                stopwords_set.update(custom_stopwords)  # Add to the stopwords set
         return stopwords_set
 
     def preprocess(self, texts):

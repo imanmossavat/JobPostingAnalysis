@@ -1,1 +1,9 @@
-id,dataset_name,original_location,project_name,last_update,time_of_creation
+id,dataset_name,original_location,project_name,last_update,time_of_creation,is_database
+2,output_file_dutch_20241114_113227.csv,C:\_WORK\Streamlit_App6\JobPostingAnalysis\users\viktor\src\data\registry\Project2\output_file_dutch_20241114_113227.csv,Project2,2024-12-20 10:55:34,2024-12-20 10:55:34,False
+3,output_file_dutch_20241114_113227.csv,C:\_WORK\Streamlit_App6\JobPostingAnalysis\users\viktor\src\data\registry\Project3\output_file_dutch_20241114_113227.csv,Project3,2024-12-20 10:55:39,2024-12-20 10:55:39,False
+5,quiz_db,C:\_WORK\Streamlit_App6\JobPostingAnalysis\users\viktor\src\data\registry\Project3\quiz_db_connection.json,Project3,2024-12-20 11:02:34,2024-12-20 11:02:34,True
+6,quiz_db,C:\_WORK\Streamlit_App6\JobPostingAnalysis\users\viktor\src\data\registry\Project3\quiz_db_connection.json,Project3,2024-12-20 11:23:25,2024-12-20 11:23:25,True
+7,quiz_db,C:\_WORK\Streamlit_App6\JobPostingAnalysis\users\viktor\src\data\registry\Project4\quiz_db_connection.json,Project4,2025-01-01 12:33:48,2025-01-01 12:33:48,True
+8,output_file_english_20241114_113227.csv,C:\_WORK\Streamlit_App6\JobPostingAnalysis\users\viktor\src\data\registry\Project4\output_file_english_20241114_113227.csv,Project4,2025-01-05 15:50:54,2025-01-05 15:50:54,False
+9,output_file_english_20241114_113227.csv,C:\_WORK\Streamlit_App6\JobPostingAnalysis\users\viktor\src\data\registry\Project3\output_file_english_20241114_113227.csv,Project3,2025-01-05 16:53:34,2025-01-05 16:53:34,False
+10,output_file_english_20241114_113227.csv,C:\_WORK\Streamlit_App6\JobPostingAnalysis\users\viktor\src\data\registry\Project2\output_file_english_20241114_113227.csv,Project2,2025-01-05 17:18:15,2025-01-05 17:18:15,False

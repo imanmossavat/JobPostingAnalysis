@@ -39,6 +39,10 @@ class WordCloudGenerator(IWordCloudGenerator):
         text_preprocessor = TextPreprocessor(self.stopword_files)
 
         # Preprocess the text in the specified column
+        if self.df.empty or self.df[self.column].dropna().empty:
+            print("No descriptions available in the DataFrame. Skipping WordCloud generation.")
+            return []
+
         self.df[self.column] = text_preprocessor.preprocess(self.df[self.column])
 
         # Ensure the output folder exists
@@ -67,7 +71,12 @@ class WordCloudGenerator(IWordCloudGenerator):
                 fontsize=24, fontweight='bold', y=0.98  # Adjusted y position for more space
             )
 
-            for i, (topic, keywords) in enumerate(topic_group):
+            subplot_idx = 0  # Track the number of used subplots
+
+            for topic, keywords in topic_group:
+                if not keywords:
+                    continue  # Skip topics with an empty keyword list
+
                 keyword_frequency = {}
 
                 # Calculate keyword frequencies
@@ -77,40 +86,42 @@ class WordCloudGenerator(IWordCloudGenerator):
                         if keyword in text.lower():
                             keyword_frequency[keyword] = keyword_frequency.get(keyword, 0) + 1
 
-                ax = axes[i]
-                if keyword_frequency:
-                    # Generate the WordCloud
-                    wordcloud = WordCloud(
-                        width=1000,
-                        height=600,
-                        background_color='white',
-                        colormap='viridis'
-                    ).generate_from_frequencies(keyword_frequency)
+                if not keyword_frequency:
+                    continue  # Skip topics without data
 
-                    # Display the WordCloud
-                    ax.imshow(wordcloud, interpolation='bilinear')
-                    ax.axis('off')
-                    ax.set_title(f"{topic}", fontsize=18, pad=20)  # Increased padding for more space above title
-                else:
-                    # Handle empty data for the topic
-                    ax.axis('off')
-                    ax.set_title(f"No data for {topic}", fontsize=18, pad=20)
+                ax = axes[subplot_idx]
+                subplot_idx += 1
+
+                # Generate the WordCloud
+                wordcloud = WordCloud(
+                    width=1000,
+                    height=600,
+                    background_color='white',
+                    colormap='viridis'
+                ).generate_from_frequencies(keyword_frequency)
+
+                # Display the WordCloud
+                ax.imshow(wordcloud, interpolation='bilinear')
+                ax.axis('off')
+                ax.set_title(f"{topic}", fontsize=18, pad=20)  # Increased padding for more space above title
 
             # Remove any unused subplots
-            for j in range(i + 1, len(axes)):
+            for j in range(subplot_idx, len(axes)):
                 fig.delaxes(axes[j])
 
             # Adjust layout for better spacing
-            plt.subplots_adjust(top=0.92)  # Adjusted to move everything lower
+            if subplot_idx > 0:  # Only save if at least one subplot was used
+                plt.subplots_adjust(top=0.92)  # Adjusted to move everything lower
 
-            # Generate a unique filename with a timestamp
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"wordcloud_group_{group_idx + 1}_{timestamp}.png"
-            filepath = os.path.join(self.output_folder, filename)
+                # Generate a unique filename with a timestamp
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"wordcloud_group_{group_idx + 1}_{timestamp}.png"
+                filepath = os.path.join(self.output_folder, filename)
 
-            # Save the figure and close it
-            plt.savefig(filepath)
-            image_paths.append(filepath)
+                # Save the figure and close it
+                plt.savefig(filepath)
+                image_paths.append(filepath)
+
             plt.close()
 
         return image_paths
