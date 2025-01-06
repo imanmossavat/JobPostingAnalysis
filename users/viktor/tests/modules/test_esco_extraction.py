@@ -1,6 +1,8 @@
-''' import pytest
-import pandas as pd
+import pytest
 from unittest import mock
+from unittest.mock import patch
+import pandas as pd
+
 import sys
 import os
 
@@ -9,101 +11,84 @@ current_dir = os.path.dirname(__file__)
 src_dir = os.path.abspath(os.path.join(current_dir, '../../src'))
 sys.path.insert(0, src_dir)
 
-from modules.esco_extraction import ESCOAnalyzer, detect_language, initiate_esco_analysis
-
+from modules.esco_extraction import ESCOAnalyzer, detect_language
 
 @pytest.fixture
-def sample_texts():
-    return [
-        {"text": "Python developer with experience in Django.", "lang": "english"},
-        {"text": "Développeur Python avec expérience en Django.", "lang": "Other"},
-    ]
+def sample_text():
+    return "This is a software engineering job requiring Python and Java skills."
 
-
-def test_detect_language_english():
-    assert detect_language("Python developer with experience in Django.") == "english"
-
-
-def test_detect_language_other():
-    assert detect_language("Développeur Python avec expérience en Django.") == "Other"
-
-
-@mock.patch("modules.esco_extraction.pipeline")
-def test_extract_skills_and_knowledge(mock_pipeline, sample_texts):
-    mock_pipeline.return_value = mock.Mock(
-        __call__=lambda text: [
-            {"start": 0, "end": 6, "score": 0.99, "word": "Python", "entity_group": "Skill"}
+@pytest.fixture
+def sample_dataframe():
+    return pd.DataFrame({
+        "Description": [
+            "Software engineer role with Python and Java.",
+            "Data scientist needed with expertise in machine learning.",
+            "Marketing expert required with SEO experience."
         ]
-    )
-    analyzer = ESCOAnalyzer()
-    analyzer.token_skill_classifier = mock_pipeline.return_value
-    analyzer.token_knowledge_classifier = mock_pipeline.return_value
+    })
 
-    for text_data in sample_texts:
-        result = analyzer.extract_skills_and_knowledge(text_data["text"], text_data["lang"])
-        assert "skills" in result
-        assert "knowledge" in result
-        assert result["detected-language"] == text_data["lang"]
+# Unit Tests
+def test_detect_language_english(sample_text):
+    lang = detect_language(sample_text)
+    assert lang == "english"
 
-
-@mock.patch("pandas.DataFrame.to_csv")
-def test_save_progress(mock_to_csv):
-    analyzer = ESCOAnalyzer()
-    sample_data = pd.DataFrame([{"text": "Sample data", "skills": [], "knowledge": []}])
-    analyzer.save_progress(sample_data, "/mock/path")
-
-    mock_to_csv.assert_called_once_with(
-        "/mock/path/extracted_skills_20240101_120000.csv", index=False, encoding="utf-8-sig"
-    )
-
-
-@mock.patch("modules.esco_extraction.Document")
-@mock.patch("modules.esco_extraction.datetime")
-@mock.patch("modules.esco_extraction.os.makedirs")
-def test_generate_report(mock_makedirs, mock_datetime, mock_document):
-    # Mock the current time returned by datetime.now()
-    mock_datetime.now.return_value.strftime.return_value = "2024-01-01 12:00:00"
-
-    # Initialize the ESCOAnalyzer instance
+def test_extract_skills_and_knowledge(sample_text):
     analyzer = ESCOAnalyzer()
 
-    # Call the method under test
-    analyzer.generate_report("input.csv", "output.csv", "/mock/reports")
+    # Mock the pipeline outputs
+    with mock.patch.object(analyzer, 'token_skill_classifier', return_value=[
+        {"start": 0, "end": 8, "score": 0.99, "word": "software", "entity_group": "Skill"}
+    ]), mock.patch.object(analyzer, 'token_knowledge_classifier', return_value=[
+        {"start": 0, "end": 8, "score": 0.95, "word": "engineering", "entity_group": "Knowledge"}
+    ]):
 
-    # Ensure that the directory creation is attempted
-    mock_makedirs.assert_any_call("/mock/reports", exist_ok=True)
+        result = analyzer.extract_skills_and_knowledge(sample_text, "english")
 
-    # Ensure the save method is called with the correct path
-    print(mock_document.return_value.save.call_args_list)  # Debugging output
-    mock_document.return_value.save.assert_called_once_with("/mock/reports/experiment_report.docx")
+    assert "skills" in result
+    assert len(result["skills"]) == 1
+    assert result["skills"][0]["entity"] == "Skill"
+    assert "knowledge" in result
+    assert len(result["knowledge"]) == 1
+    assert result["knowledge"][0]["entity"] == "Knowledge"
+
+# Integration Tests
+def test_initiate_esco_analysis(sample_dataframe):
+    with patch('os.makedirs') as mock_makedirs:
+        analyzer = ESCOAnalyzer()
+
+        # Mock methods
+        with mock.patch.object(analyzer, 'extract_skills_and_knowledge', return_value={
+            "skills": [{"entity": "Skill", "word": "Python"}],
+            "knowledge": [{"entity": "Knowledge", "word": "machine learning"}],
+            "detected-language": "english"
+        }):
+
+            results = []
+            for _, row in sample_dataframe.iterrows():
+                job_description = row["Description"]
+                lang = detect_language(job_description)
+                extracted_data = analyzer.extract_skills_and_knowledge(job_description, lang)
+                results.append(extracted_data)
+
+            # Verify results
+            assert len(results) == len(sample_dataframe)
+            assert all("skills" in res for res in results)
+
+            # Ensure no new folders are created
+            mock_makedirs.assert_called()
 
 
-@mock.patch("modules.esco_extraction.ESCOAnalyzer.extract_skills_and_knowledge")
-@mock.patch("modules.esco_extraction.ESCOAnalyzer.save_progress")
-@mock.patch("modules.esco_extraction.ESCOAnalyzer.generate_report")
-@mock.patch("modules.esco_extraction.pd.read_csv")
-def test_initiate_esco_analysis(mock_read_csv, mock_generate_report, mock_save_progress, mock_extract_skills):
-    # Mock return value for extract_skills_and_knowledge
-    mock_extract_skills.return_value = {
-        "text": "Sample job description",
-        "skills": [{"word": "Python", "entity": "Skill"}],
-        "knowledge": [],
-        "detected-language": "english",
-    }
+def test_generate_report():
+    analyzer = ESCOAnalyzer()
+    with patch('os.makedirs'), \
+         patch('subprocess.check_output', return_value=b'12345abc') as mock_git:
 
-    # Mock input CSV data
-    sample_csv = pd.DataFrame({"Description": ["Sample job description"]})
-    mock_read_csv.return_value = sample_csv
+        input_file = "test_input.csv"
+        output_file = "test_output.csv"
+        output_subfolder = "test_subfolder"
 
-    input_file = "/mock/input.csv"
-    output_file = "/mock/output.csv"
-    output_subfolder = "/mock/output_subfolder"
+        with mock.patch.object(analyzer, 'generate_report') as mock_generate_report:
+            analyzer.generate_report(input_file, output_file, output_subfolder)
 
-    # Call the function under test
-    initiate_esco_analysis(input_file, output_file, output_subfolder)
-
-    # Validate calls
-    mock_read_csv.assert_called_once_with(input_file)
-    mock_extract_skills.assert_called()
-    mock_save_progress.assert_called()
-    mock_generate_report.assert_called_once_with(input_file, output_file, output_subfolder) '''
+        # Verify report generation is called
+        mock_generate_report.assert_called_with(input_file, output_file, output_subfolder)

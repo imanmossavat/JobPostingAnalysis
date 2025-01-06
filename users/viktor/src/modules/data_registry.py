@@ -16,7 +16,7 @@ class DatasetRegistry(IDatasetRegistry):
         self.BASE_FOLDER = BASE_FOLDER
         self.REGISTRY_FILE = REGISTRY_FILE
     
-    def save_dataset(self, dataset, dataset_name, project_name, db_connection=None):
+    def save_dataset(self, dataset, dataset_name, project_name, db_connection=None, embeddings_df=None):
         """
         Save a dataset or database connection to the project folder and update the registry.
 
@@ -49,6 +49,7 @@ class DatasetRegistry(IDatasetRegistry):
                     return f"Error: A dataset with the name {dataset_name} already exists."
 
                 dataset.to_csv(file_path, index=False)
+                embeddings_df.to_csv("description_embeddings.csv", index=False, header=False)
                 dataset_path = file_path
 
             # Update registry file

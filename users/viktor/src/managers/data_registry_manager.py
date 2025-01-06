@@ -34,7 +34,7 @@ class DataRegistryManager:
         if db_connection:
             # Save database connection details
             dataset_name = f"{db_connection['name']}_db"
-            return self.dataset_registry.save_dataset(None, dataset_name, project_name, db_connection)
+            return self.dataset_registry.save_dataset(None, dataset_name, project_name, db_connection=db_connection)
         
         if dataset is not None:
             if dataset.name.endswith('.csv'):
@@ -65,10 +65,10 @@ class DataRegistryManager:
             embeddings_df = pd.DataFrame(embeddings)
 
             # Save to a CSV file
-            embeddings_df.to_csv("description_embeddings.csv", index=False, header=False)
+            # embeddings_df.to_csv("description_embeddings.csv", index=False, header=False)
 
             dataset_name = dataset.name
-            return self.dataset_registry.save_dataset(df, dataset_name, project_name)
+            return self.dataset_registry.save_dataset(df, dataset_name, project_name, embeddings_df=embeddings_df)
 
     def remove_dataset(self, project_to_remove, dataset_to_remove):
         return self.dataset_registry.remove_dataset(project_to_remove, dataset_to_remove)
