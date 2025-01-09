@@ -1,4 +1,5 @@
 from .topic_modeling_manager import Topic_Modeling_Manager
-from .box_plots_manager import Box_Plots_Manager
+from .box_plots_manager import Box_Plots_Manager, get_json_files_for_box_plots
 from .data_registry_manager import DataRegistryManager
-from .word_clouds_manager import Word_Clouds_Manager
+from .word_clouds_manager import Word_Clouds_Manager, get_json_files_for_word_clouds
+from .esco_analysis_manager import ESCOManager

@@ -4,74 +4,76 @@ import pandas as pd
 import numpy as np
 import json
 import re
+import ast
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.special import softmax
 from datetime import datetime
 from interfaces import IKeywordFeatureExtractor, IBoxPlots
+from sklearn.metrics.pairwise import cosine_similarity
 
 class KeywordFeatureExtractorBoxPlots(IKeywordFeatureExtractor):
     """
-    A class for extracting keyword-based features from a text column in a DataFrame and applying softmax normalization.
+    A class for extracting keyword-based features from a DataFrame containing embeddings and applying softmax normalization.
 
     Attributes:
-        df (pd.DataFrame): The input DataFrame containing the text data.
-        column (str): The name of the column in the DataFrame that contains text (e.g., job descriptions).
+        df (pd.DataFrame): The input DataFrame containing the embeddings.
+        column (str): The name of the column in the DataFrame that contains embeddings (e.g., sentence embeddings).
         keyword_dict (dict): A dictionary where keys are feature names and values are lists of keywords.
+        keyword_embeddings (dict): A dictionary where the keys are feature names and the values are the embeddings for the keywords.
         temp (float): Temperature parameter for softmax normalization, which controls the scale of the values (default is 0.5).
 
     Methods:
         extract_features():
-            Extracts binary features based on keyword matches in the specified text column and applies softmax normalization.
+            Extracts features based on cosine similarity between the embeddings and keyword embeddings, then applies softmax normalization.
     """
     
-    def __init__(self, df, column, keyword_dict, temp=0.5):
+    def __init__(self, df, embeddings_df, column, keyword_dict, keyword_embeddings, temp=0.5):
         """
         Initializes the KeywordFeatureExtractorBoxPlots instance.
 
         Args:
-            df (pd.DataFrame): DataFrame containing text data.
-            column (str): Name of the text column to process.
+            df (pd.DataFrame): DataFrame containing embeddings.
+            column (str): Name of the column containing embeddings.
             keyword_dict (dict): Dictionary with feature names as keys and lists of keywords as values.
+            keyword_embeddings (dict): Dictionary with feature names as keys and their corresponding keyword embeddings as values.
             temp (float): Temperature parameter for softmax normalization (default is 0.5).
         """
         self.df = df
+        self.embeddings_df = embeddings_df
         self.column = column
         self.keyword_dict = keyword_dict
+        self.keyword_embeddings = keyword_embeddings
         self.temp = temp
-
+    
     def extract_features(self):
         """
-        Extracts binary features based on keyword matches from the specified text column and normalizes the features using softmax.
-
-        Each feature corresponds to a keyword group, and a value of 1 is assigned if any of the keywords in the group are 
-        found in the text. An 'Other' feature is also created for entries that do not match any of the keywords.
-
-        The features are then normalized using the softmax function, where the 'temp' parameter is used for scaling the values.
-
-        Returns:
-            pd.DataFrame: A DataFrame with the original data and the newly extracted features, with softmax normalization applied.
+        Extracts features based on cosine similarity between embeddings and keyword embeddings, and normalizes the features using softmax.
         """
         # Check if column exists
-        if self.column not in self.df.columns:
+        if self.column not in self.embeddings_df.columns:
             print(f"Column '{self.column}' not found in DataFrame.")
             sys.exit(1)
 
-        # Fill missing values with empty strings
-        if self.df[self.column].isnull().any():
-            self.df[self.column].fillna('', inplace=True)
+        # Ensure the embeddings are in the correct format (convert string representation to list)
+        embeddings = np.array(self.embeddings_df[self.column].apply(lambda x: np.array(ast.literal_eval(x))).tolist())
 
         # Create a copy of the original DataFrame to store the features
         feature_df = self.df.copy()
 
-        # Extract binary features for each keyword group
+        # Calculate the cosine similarity between each embedding and the keyword embeddings
         for feature_name, keywords in self.keyword_dict.items():
-            feature_df[feature_name] = feature_df[self.column].apply(
-                lambda text: int(any(re.search(r'\b' + re.escape(keyword) + r'\b', text, flags=re.IGNORECASE) for keyword in keywords))
-            )
+            # Get the keyword embeddings
+            keyword_embeds = self.keyword_embeddings[feature_name]
 
-        # Add 'Other' feature for no keyword match
-        feature_df['Other'] = (feature_df[list(self.keyword_dict.keys())].sum(axis=1) == 0).astype(int)
+            # Calculate the cosine similarity for each embedding in the column
+            similarities = cosine_similarity(embeddings, keyword_embeds)
+
+            # Assign the maximum similarity to the corresponding feature
+            feature_df[feature_name] = np.max(similarities, axis=1)
+
+        # Add 'Other' feature for no match (this will be handled by the lowest similarity values)
+        feature_df['Other'] = 1 - feature_df[list(self.keyword_dict.keys())].max(axis=1)
 
         # Normalize the features using softmax
         def apply_softmax_with_temp(row):

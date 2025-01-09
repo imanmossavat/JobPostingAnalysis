@@ -1,0 +1,96 @@
+{
+    "Data": [
+        "data", "dataset", "database", "machine learning", "data analysis", "big data", "predictive modeling",
+        "statistical analysis", "data visualization", "data mining",
+        "feature engineering", "data modeling", "deep learning",
+        "python", "r programming", "neural networks", "natural language processing",
+        "time series analysis", "ab testing", "hypothesis testing",
+        "data preprocessing", "dimensionality reduction", "clustering algorithms",
+        "data cleaning", "business intelligence", "sql",
+        "data visualization",
+        "data analytics", "excel", "excel modeling",
+        "tableau", "power bi", "data storytelling", "statistical analysis",
+        "kpi tracking", "data governance",
+        "hadoop", "spark",
+        "nosql", "data architecture",
+        "data integration", "apache kafka", "data engineering",
+        "data modeling", "data lake", "etl",
+        "distributed systems", "scala", "hive", "airflow", "statistic", "metric", "insight"
+    ],
+    "Security": [
+        "vulnerability", "network", "risk management", "cybersecurity", "security", "firewall", "threat detection", "incident response", "protection",
+        "compliance", "siem", "intrusion detection", "social engineering", "encryption", "threat analysis", "incident management",
+        "secure coding practices", "devsecops", "identity and access management", "zero trust architecture", "penetration testing", 
+        "hacking", "hacker", "ethical hacking", "white hat", "exploit development", "social engineering", "malware", "cryptography",
+        "osint", "red teaming", "bug bounty", "routing", "tcp", "ip", "lan", "wan", "vpn", "sdwan", "cisco", "security threat"
+    ],
+    "Gaming": [
+        "game engines", "game engine", "unity",
+        "game design", "3d", "3d modeling",
+        "multiplayer", "graphics",
+        "unreal engine", "unreal", "physics engines", "shader",
+        "game audio", "game ui", "game", "games", "gaming",
+        "game mechanics", "user experience", "game narrative",
+        "character design", "interface design",
+        "player engagement", "game systems",
+        "playtesting",
+        "worldbuilding",
+        "quest design", "smartsensors"
+    ],
+    "Software": [
+        "fullstack", "web development", "api", "api design",
+        "fullstack", "full stack", "web development", "api", "apis", "database", "databases", "serverside",
+        "frontend", "backend", "devops", "git", "oop", "cicd", "cloud", "clouds", "container", "containerization", "programming", "objectoriented_programming",
+        "html", "frontend", "css", "javascript", "reactjs", "vuejs", "react", "vue", "typescript", "angular", "redux", "restful", "nodejs", "python", "java", "spring",
+        "microservices", "orm", "docker", "kubernetes"
+    ],
+    "Cloud Services": [
+        "cloud computing", "cloud", "aws", "azure", "cloud architecture",
+        "devops", "containerization", "kubernetes", "cloud storage",
+        "serverless computing", "cloud services", "infrastructure as code",
+        "cloud migration", "multicloud", "multicloud strategies", "cloud security",
+        "cloud cost optimization", "cloud monitoring", "docker",
+        "terraform", "microservices", "hosting", "docker", "elastic", "cloud native", "native"
+    ],
+    "Engineering and Electronics": [
+        "firmware", "embedded systems", "c programming",
+        "microcontrollers", "realtime systems", "linux",
+        "hardware", "rtos", "lowlevel programming",
+        "arm architecture", "device drivers", "embedded debugging",
+        "iot development", "baremetal programming", "embedded security",
+        "power management", "embedded ui", "can bus", "fpga",
+        "pcb", "electronic components",
+        "signal processing", "circuit", "electronics",
+        "electrical engineering", "schematics",
+        "component sourcing", "fpga", "vhdl",
+        "verilog", "thermal management",
+        "emcemi compliance", "embedded software",
+        "microcontroller programming", "lowlevel programming", "bootloaders",
+        "c programming", "cpppp",
+        "realtime software", "device drivers",
+        "jtag", "spi", "i2c", "uart",
+        "overtheair updates",
+        "mechatronics", "automation",
+        "robot", "robotics", "ai robotics",
+        "control systems", "sensor", "ros", "kinematics",
+        "humanrobot interaction",
+        "machine learning for robotics", "manufacturer",
+        "magnetics"
+    ],
+    "Design": [
+        "user interface", "ui", "ux", "user experience", "wireframing",
+        "interactive design", "prototyping", "prototype", "ux research",
+        "ui design", "figma", "user testing", "persona development",
+        "information architecture", "usability testing", "design systems",
+        "interaction design", "usercentered design", "accessibility design",
+        "motion design", "mockup", "interface", "wireframes"
+    ],
+    "AI Related": [
+        "artificial intelligence", "ai", "ml", "machine learning", "dl",
+        "deep learning", "neural networks", "ai algorithms",
+        "natural language processing", "nlp", "reinforcement learning",
+        "ai models", "tensorflow", "pytorch", "python",
+        "computer vision", "generative ai", "gans", "transformers", "explainable ai", "neural", "prediction", 
+        "pysyft", "kernels", "tflitemicro", "embedl", "scripting"
+    ]
+}

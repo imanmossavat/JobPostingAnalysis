@@ -1,6 +1,5 @@
 import streamlit as st
 from managers import Topic_Modeling_Manager
-# from config import topic_modeling_input_variables
 
 from config import Config
 

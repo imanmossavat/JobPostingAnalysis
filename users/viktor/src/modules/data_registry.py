@@ -16,7 +16,7 @@ class DatasetRegistry(IDatasetRegistry):
         self.BASE_FOLDER = BASE_FOLDER
         self.REGISTRY_FILE = REGISTRY_FILE
     
-    def save_dataset(self, dataset, dataset_name, project_name, db_connection=None, embeddings_df=None):
+    def save_dataset(self, dataset, embeddings_dataset, dataset_name, project_name, db_connection=None):
         """
         Save a dataset or database connection to the project folder and update the registry.
 
@@ -25,31 +25,37 @@ class DatasetRegistry(IDatasetRegistry):
             dataset_name (str): The name of the dataset or connection file.
             project_name (str): The project folder name.
             db_connection (dict): Optional database connection details.
+            embeddings_df (pd.DataFrame): Optional embeddings DataFrame to save.
+            embeddings_name (str): Optional name for the embeddings file.
         """
         project_folder = Path(self.BASE_FOLDER) / project_name
+        dataset_folder = project_folder / dataset_name
 
         try:
-            # Create project folder if it doesn't exist
-            project_folder.mkdir(parents=True, exist_ok=True)
+            # Create project and dataset folders if they don't exist
+            dataset_folder.mkdir(parents=True, exist_ok=True)
 
-            # Check if it's a database connection
+            # Save database connection
             if db_connection:
-                # Save connection details to a file
-                connection_file = project_folder / f"{dataset_name}_connection.json"
+                connection_file = dataset_folder / f"{dataset_name}_connection.json"
                 if connection_file.exists():
                     return f"Error: A connection file with the name {dataset_name}_connection.json already exists."
 
-                # Save connection details as JSON
                 pd.DataFrame([db_connection]).to_json(connection_file, orient='records', lines=True)
                 dataset_path = connection_file
             else:
-                # Save the dataset file (e.g., CSV)
-                file_path = project_folder / dataset_name
+                # Save the dataset
+                file_path = dataset_folder / f"{dataset_name}.csv"
                 if file_path.exists():
-                    return f"Error: A dataset with the name {dataset_name} already exists."
+                    return f"Error: A dataset with the name {dataset_name}.csv already exists."
+                
+                embeddings_file_path = dataset_folder / "embeddings.csv"
+                if embeddings_file_path.exists():
+                    return f"Error: A dataset with the name {embeddings_file_path}.csv already exists."
 
                 dataset.to_csv(file_path, index=False)
-                embeddings_df.to_csv("description_embeddings.csv", index=False, header=False)
+                embeddings_dataset.to_csv(embeddings_file_path, index=False)
+
                 dataset_path = file_path
 
             # Update registry file
@@ -72,31 +78,51 @@ class DatasetRegistry(IDatasetRegistry):
             registry_df = pd.concat([registry_df, pd.DataFrame([new_entry])], ignore_index=True)
             registry_df.to_csv(self.REGISTRY_FILE, index=False)
 
-            return f"Dataset or connection saved successfully as {dataset_path}."
+            return f"Dataset or connection saved successfully in {dataset_folder}."
         except Exception as e:
-            return f"Error: {e}"
+            return f"Error: {e}. Ensure all inputs are valid and directories are writable."
 
     def remove_dataset(self, project_to_remove, dataset_to_remove):
         """
-        Remove a dataset or database connection file and update the registry.
+        Remove a dataset or database connection subfolder and update the registry.
+
+        Args:
+            project_to_remove (str): The name of the project containing the dataset.
+            dataset_to_remove (str): The name of the dataset (subfolder) to remove.
+
+        Returns:
+            str: A message indicating success or the error encountered.
         """
         project_folder = Path(self.BASE_FOLDER) / project_to_remove
-        dataset_path = project_folder / dataset_to_remove
+        dataset_folder = project_folder / dataset_to_remove
 
         try:
-            if dataset_path.exists():
-                os.remove(dataset_path)
+            # Check if the dataset subfolder exists
+            if dataset_folder.exists() and dataset_folder.is_dir():
+                # Delete all files in the subfolder and then remove the folder
+                for file in dataset_folder.iterdir():
+                    if file.is_file():
+                        file.unlink()  # Remove individual files
+                    elif file.is_dir():
+                        # Recursively delete subdirectories
+                        for subfile in file.iterdir():
+                            subfile.unlink()
+                        file.rmdir()
+                dataset_folder.rmdir()  # Remove the main dataset folder
+
+                # Update the registry
                 if self.REGISTRY_FILE.exists():
                     registry_df = pd.read_csv(self.REGISTRY_FILE)
                     registry_df = registry_df[~((registry_df["dataset_name"] == dataset_to_remove) & 
                                                 (registry_df["project_name"] == project_to_remove))]
                     registry_df.to_csv(self.REGISTRY_FILE, index=False)
+
                 return f"Dataset {dataset_to_remove} removed successfully from project {project_to_remove}."
             else:
                 return f"Error: Dataset {dataset_to_remove} not found in project {project_to_remove}."
         except Exception as e:
             return f"Error: {e}"
-    
+
     def get_existing_projects(self):
         """
         Retrieve a list of existing projects (folders) in the base directory.
@@ -107,15 +133,18 @@ class DatasetRegistry(IDatasetRegistry):
         project_folders = [folder.name for folder in Path(self.BASE_FOLDER).iterdir() if folder.is_dir()]
         return project_folders
 
-    def get_datasets_in_project(self, project_to_remove):
+    def get_datasets_in_project(self, project_name):
         """
-        Retrieve a list of dataset files within the specified project folder.
+        Retrieve a list of dataset subfolders within the specified project folder.
+
+        Args:
+            project_name (str): The name of the project folder.
 
         Returns:
-            list: A list of dataset file names in the project folder. If the folder does
-                  not exist, an empty list is returned.
+            list: A list of dataset subfolder names in the project folder. If the folder
+                  does not exist, an empty list is returned.
         """
-        project_folder = Path(self.BASE_FOLDER) / project_to_remove
-        if project_folder.exists():
-            return [file.name for file in project_folder.iterdir() if file.is_file()]
+        project_folder = Path(self.BASE_FOLDER) / project_name
+        if project_folder.exists() and project_folder.is_dir():
+            return [folder.name for folder in project_folder.iterdir() if folder.is_dir()]
         return []

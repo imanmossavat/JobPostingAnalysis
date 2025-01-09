@@ -1,20 +1,26 @@
 import pandas as pd
 import os
+from external_systems import SSEMEmbedder
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from datetime import datetime
 from typing import List, Dict
 from interfaces import IWordCloudGenerator
-from .text_preprocessor import TextPreprocessor
+from sentence_transformers.util import cos_sim
+from collections import defaultdict
+import numpy as np
+
+# from .text_preprocessor import TextPreprocessor
 
 class WordCloudGenerator(IWordCloudGenerator):
-    def __init__(self, df: pd.DataFrame, keyword_dict: Dict[str, List[str]], output_folder: str, name_of_topics: str, 
-                 stopword_files: List[str], column: str = 'Description'):
+    def __init__(self, df: pd.DataFrame, embeddings_data: pd.DataFrame, keyword_dict: Dict[str, List[str]], output_folder: str, name_of_topics: str, 
+                 stopword_files: List[str], column: str):
         """
         Initialize the WordCloudGenerator.
 
         Parameters:
         df (pd.DataFrame): DataFrame containing job descriptions and other relevant data.
+        embeddings_data (pd.DataFrame): DataFrame containing job descriptions and other relevant data.
         keyword_dict (dict): Dictionary where keys are topic names and values are lists of associated keywords.
         output_folder (str): Folder where the generated WordCloud images will be saved.
         name_of_topics (str): Common title for the WordCloud topics.
@@ -22,6 +28,7 @@ class WordCloudGenerator(IWordCloudGenerator):
         column (str): Name of the column containing job descriptions in the DataFrame.
         """
         self.df = df
+        self.embeddings_data = embeddings_data
         self.keyword_dict = keyword_dict
         self.output_folder = output_folder
         self.name_of_topics = name_of_topics
@@ -30,23 +37,20 @@ class WordCloudGenerator(IWordCloudGenerator):
 
     def generate_wordcloud_for_topic(self) -> List[str]:
         """
-        Generate WordCloud images for each topic based on keyword frequencies in job descriptions.
+        Generate WordCloud images for each topic based on embedding similarities in job descriptions.
 
         Returns:
         list: Paths to the generated WordCloud images.
         """
-        # Initialize the TextPreprocessor
-        text_preprocessor = TextPreprocessor(self.stopword_files)
-
-        # Preprocess the text in the specified column
-        if self.df.empty or self.df[self.column].dropna().empty:
-            print("No descriptions available in the DataFrame. Skipping WordCloud generation.")
-            return []
-
-        self.df[self.column] = text_preprocessor.preprocess(self.df[self.column])
-
         # Ensure the output folder exists
         os.makedirs(self.output_folder, exist_ok=True)
+
+        if self.embeddings_data.empty or self.embeddings_data['description_embeddings'].dropna().empty:
+            print("No embeddings available in the DataFrame. Skipping WordCloud generation.")
+            return []
+
+        # Initialize the embedder (ensure the model matches the one used for embeddings)
+        embedder = SSEMEmbedder("all-mpnet-base-v2")  # Adjust the model name if necessary
 
         # Divide topics into manageable subgroups
         topic_groups = list(self.keyword_dict.items())
@@ -77,17 +81,24 @@ class WordCloudGenerator(IWordCloudGenerator):
                 if not keywords:
                     continue  # Skip topics with an empty keyword list
 
-                keyword_frequency = {}
+                # Generate embeddings for keywords
+                keyword_embeddings = embedder.generate_embeddings(keywords)
+                keyword_frequency = defaultdict(float)  # Initialize with float for frequencies
 
-                # Calculate keyword frequencies
-                for text in self.df[self.column]:
-                    for keyword in keywords:
-                        keyword = keyword.lower()
-                        if keyword in text.lower():
-                            keyword_frequency[keyword] = keyword_frequency.get(keyword, 0) + 1
+                # Ensure all embeddings are numpy arrays with the same dtype
+                keyword_embeddings = np.array(keyword_embeddings, dtype=np.float32)
 
-                if not keyword_frequency:
-                    continue  # Skip topics without data
+                # Calculate keyword relevance based on cosine similarity
+                for desc_embedding in self.embeddings_data['description_embeddings']:
+                    desc_embedding = np.array(eval(desc_embedding), dtype=np.float32)  # Ensure embeddings are in array format and dtype is consistent
+
+                    for keyword, keyword_embedding in zip(keywords, keyword_embeddings):
+                        similarity = cos_sim(keyword_embedding, desc_embedding).item()
+                        keyword_frequency[keyword] += similarity
+
+                # Skip topics without meaningful similarity
+                if all(freq == 0 for freq in keyword_frequency.values()):
+                    continue
 
                 ax = axes[subplot_idx]
                 subplot_idx += 1
@@ -98,7 +109,7 @@ class WordCloudGenerator(IWordCloudGenerator):
                     height=600,
                     background_color='white',
                     colormap='viridis'
-                ).generate_from_frequencies(keyword_frequency)
+                ).generate_from_frequencies(dict(keyword_frequency))  # Ensure it's a dict
 
                 # Display the WordCloud
                 ax.imshow(wordcloud, interpolation='bilinear')

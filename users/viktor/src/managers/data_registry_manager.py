@@ -35,7 +35,7 @@ class DataRegistryManager:
             # Save database connection details
             dataset_name = f"{db_connection['name']}_db"
             return self.dataset_registry.save_dataset(None, dataset_name, project_name, db_connection=db_connection)
-        
+
         if dataset is not None:
             if dataset.name.endswith('.csv'):
                 df = pd.read_csv(dataset)
@@ -56,19 +56,18 @@ class DataRegistryManager:
             descriptions = df["description"].tolist()
             embeddings = embedder.generate_embeddings(descriptions)
 
-            ''' # Save embeddings to a file
-            np.save("description_embeddings2.npy", embeddings) '''
-
             embeddings = np.array(embeddings)  # Ensure embeddings are in NumPy array format
 
-            # Create a DataFrame for embeddings
-            embeddings_df = pd.DataFrame(embeddings)
+            # Add embeddings as a new column in the DataFrame
+            # df['description_embeddings'] = embeddings.tolist()
 
-            # Save to a CSV file
-            # embeddings_df.to_csv("description_embeddings.csv", index=False, header=False)
+            embeddings_df = pd.DataFrame()
+
+            embeddings_df['description_embeddings'] = embeddings.tolist()
 
             dataset_name = dataset.name
-            return self.dataset_registry.save_dataset(df, dataset_name, project_name, embeddings_df=embeddings_df)
+
+            return self.dataset_registry.save_dataset(df, embeddings_df, dataset_name, project_name)
 
     def remove_dataset(self, project_to_remove, dataset_to_remove):
         return self.dataset_registry.remove_dataset(project_to_remove, dataset_to_remove)

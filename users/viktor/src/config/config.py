@@ -5,6 +5,7 @@ from .files import stopword_file_names
 from .files import reports_folder_path
 from .files import registry_file_path
 from .files import registry_folder_path
+from .files import keywords_folder_path
 
 # from pathlib import Path
 
@@ -16,13 +17,15 @@ class Config():
 
         self._csv_dataset = english_dataset_path
 
-        self._topics_file = job_titles_clusters
+        self._keywords_folder_path = keywords_folder_path
+
+        self._topics_file = industries_and_sectors
 
         self._stopword_file_names = stopword_file_names
 
         self._name_of_topics = "Job Area"
 
-        self._text_column = "Description"
+        self._text_column = "description"
 
         self._reports_folder_path = reports_folder_path
 
@@ -86,6 +89,10 @@ class Config():
         return self._reports_folder_path
     
     @property
+    def keywords_folder_path(self):
+        return self._keywords_folder_path
+    
+    @property
     def base_folder(self):
         return self._base_folder
     
@@ -143,6 +150,13 @@ class Config():
             self._reports_folder_path = value
         else:
             raise ValueError("reports_folder_path must be a string.")
+    
+    @keywords_folder_path.setter
+    def keywords_folder_path(self, value):
+        if isinstance(value, str):
+            self._keywords_folder_path = value
+        else:
+            raise ValueError("keywords_folder_path must be a string.")
 
     @name_of_topics.setter
     def name_of_topics(self, value):

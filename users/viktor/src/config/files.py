@@ -21,6 +21,10 @@ raw_data_name = 'raw'
 
 registry_folder_name = 'registry'
 
+keywords_folder_name = 'keywords'
+
+keywords_folder_path = os.path.join(data_folder, keywords_folder_name)
+
 # English dataset path
 english_dataset = "output_file_english_20241114_113227.csv"
 english_dataset_path = os.path.join(data_folder, raw_data_name, english_dataset)
