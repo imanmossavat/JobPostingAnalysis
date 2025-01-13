@@ -13,13 +13,12 @@ import numpy as np
 # from .text_preprocessor import TextPreprocessor
 
 class WordCloudGenerator(IWordCloudGenerator):
-    def __init__(self, df: pd.DataFrame, embeddings_data: pd.DataFrame, keyword_dict: Dict[str, List[str]], output_folder: str, name_of_topics: str, 
+    def __init__(self, embeddings_data: pd.DataFrame, keyword_dict: Dict[str, List[str]], output_folder: str, name_of_topics: str, 
                  stopword_files: List[str], column: str):
         """
         Initialize the WordCloudGenerator.
 
         Parameters:
-        df (pd.DataFrame): DataFrame containing job descriptions and other relevant data.
         embeddings_data (pd.DataFrame): DataFrame containing job descriptions and other relevant data.
         keyword_dict (dict): Dictionary where keys are topic names and values are lists of associated keywords.
         output_folder (str): Folder where the generated WordCloud images will be saved.
@@ -27,7 +26,6 @@ class WordCloudGenerator(IWordCloudGenerator):
         stopword_files (list): List of paths to stopword files for text preprocessing.
         column (str): Name of the column containing job descriptions in the DataFrame.
         """
-        self.df = df
         self.embeddings_data = embeddings_data
         self.keyword_dict = keyword_dict
         self.output_folder = output_folder
@@ -45,7 +43,7 @@ class WordCloudGenerator(IWordCloudGenerator):
         # Ensure the output folder exists
         os.makedirs(self.output_folder, exist_ok=True)
 
-        if self.embeddings_data.empty or self.embeddings_data['description_embeddings'].dropna().empty:
+        if self.embeddings_data.empty or self.embeddings_data[self.column].dropna().empty:
             print("No embeddings available in the DataFrame. Skipping WordCloud generation.")
             return []
 
@@ -89,7 +87,7 @@ class WordCloudGenerator(IWordCloudGenerator):
                 keyword_embeddings = np.array(keyword_embeddings, dtype=np.float32)
 
                 # Calculate keyword relevance based on cosine similarity
-                for desc_embedding in self.embeddings_data['description_embeddings']:
+                for desc_embedding in self.embeddings_data[self.column]:
                     desc_embedding = np.array(eval(desc_embedding), dtype=np.float32)  # Ensure embeddings are in array format and dtype is consistent
 
                     for keyword, keyword_embedding in zip(keywords, keyword_embeddings):

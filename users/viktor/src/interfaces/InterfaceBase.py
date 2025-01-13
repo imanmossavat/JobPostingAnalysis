@@ -44,6 +44,56 @@ class IWordCloudGenerator(ABC):
         """
         pass
 
+class ITopicModelVisualizer(ABC):
+    def __init__(self, model, output_subfolder, experiment_file):
+        """
+        Initializes the visualizer with the model, output folder, and experiment file.
+
+        Args:
+            model: The topic modeling algorithm or object to be visualized.
+            output_subfolder (str): The folder where visualizations will be saved.
+            experiment_file (str): The file containing the experiment details or configuration.
+        """
+        self.model = model
+        self.output_subfolder = output_subfolder
+        self.experiment_file = experiment_file
+    
+    @abstractmethod
+    def plot_inertia_graph(self, inertia_value):
+        pass
+
+    @abstractmethod
+    def plot_ari_graph(self, ari_value):
+        pass
+
+    @abstractmethod
+    def create_wordclouds(self, keywords):
+        pass
+
+    @abstractmethod
+    def visualize_topic_diversity(self, topic_diversity):
+        pass
+
+    @abstractmethod
+    def visualize_silhouette_score(self, silhouette_score):
+        pass
+
+    @abstractmethod
+    def visualize_clustering_stability(self, clustering_stability):
+        pass
+
+    @abstractmethod
+    def plot_topic_percentage(self, topic_percentages):
+        pass
+
+    @abstractmethod
+    def generate_report(self, topic_diversity, silhouette_score, clustering_stability, topic_percentages):
+        pass
+
+    @abstractmethod
+    def create_all_visualizations(self, topic_diversity, silhouette_score, clustering_stability, topic_percentages, inertia, ari_score, keywords):
+        pass
+
 class ITextPreprocessor(ABC):
     """
     Abstract base class for text preprocessing.
@@ -332,79 +382,70 @@ class ITopicAssignment(ABC):
         pass
 
 class ITopicModel(ABC):
-    """
-    Interface for Topic Modeling classes.
-    """
-
-    @abstractmethod
-    def __init__(self, n_topics, data, stopword_files, num_top_words, epochs, output_subfolder):
+    def __init__(self, embeddings: List[List[float]], texts: List[str], n_topics: int, num_keywords: int, max_iter: int, model: str, output_subfolder: str):
         """
-        Initialize the topic model with necessary parameters.
+        Initialize the TopicModel interface.
 
         Args:
+            embeddings (list): List of precomputed embeddings for the text data.
+            texts (list): List of textual data for topic modeling.
             n_topics (int): Number of topics to extract.
-            data (dict): Dataset containing the descriptions to process.
-            stopword_files (list): File paths to stopword lists.
-            num_top_words (int): Number of top words per topic to display.
-            epochs (int): Maximum number of iterations for the model.
-            output_subfolder (str): Directory for saving output files.
+            num_keywords (int): Number of top keywords per topic.
+            max_iter (int): Maximum number of iterations for the KMeans algorithm.
+            model (str): Pretrained model to use for generating embeddings.
+            output_subfolder (str): Directory to save the output files.
         """
+        self.embeddings = embeddings
+        self.texts = texts
+        self.n_topics = n_topics
+        self.num_keywords = num_keywords
+        self.max_iter = max_iter
+        self.output_subfolder = output_subfolder
+        self.model = model
+
+    @abstractmethod
+    def fit_model(self):
+        """Fit the topic model to the data."""
         pass
 
     @abstractmethod
-    def fit(self):
-        """
-        Fit the model to the data.
-        """
+    def extract_keywords(self, texts: List[str], labels: List[int], num_keywords: int) -> Dict[int, List[str]]:
+        """Extract keywords for each topic."""
         pass
 
     @abstractmethod
-    def display_topics(self):
-        """
-        Display the top words for each topic.
-        """
+    def calculate_silhouette_score(self, embeddings: List[List[float]], labels: List[int]) -> float:
+        """Calculate the silhouette score."""
         pass
 
     @abstractmethod
-    def calculate_topic_coherence(self):
-        """
-        Calculate the topic coherence score.
-        """
+    def calculate_inertia(self) -> float:
+        """Calculate the inertia of the clustering model."""
         pass
 
     @abstractmethod
-    def calculate_topic_diversity(self):
-        """
-        Calculate the topic diversity score.
-        """
+    def calculate_ari(self, true_labels: List[int], predicted_labels: List[int]) -> float:
+        """Calculate the Adjusted Rand Index."""
         pass
 
     @abstractmethod
-    def calculate_silhouette_score(self):
-        """
-        Calculate the silhouette score for clustering.
-        """
+    def evaluate_clustering_stability(self, embeddings: List[List[float]], n_clusters: int, n_runs: int) -> float:
+        """Evaluate the stability of clustering."""
         pass
 
     @abstractmethod
-    def evaluate_clustering_stability(self, num_runs):
-        """
-        Evaluate clustering stability by running multiple trials.
-        """
+    def calculate_topic_diversity(self, keywords: Dict[int, List[str]]) -> float:
+        """Calculate the diversity of topics."""
         pass
 
     @abstractmethod
-    def calculate_cosine_similarity(self):
-        """
-        Calculate pairwise cosine similarity between topics.
-        """
+    def calculate_topic_percentages(self) -> Dict[int, float]:
+        """Calculate the percentage of documents assigned to each topic."""
         pass
 
     @abstractmethod
-    def calculate_topic_percentage(self):
-        """
-        Calculate the percentage contribution of each topic.
-        """
+    def execute_topic_modeling(self):
+        """Execute the topic modeling process and return results."""
         pass
 
 class ISkillKnowledgeExtractor(ABC):

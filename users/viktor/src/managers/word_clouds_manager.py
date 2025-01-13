@@ -16,7 +16,6 @@ configs = Config()
 keywords_folder_path = configs.keywords_folder_path
 text_column = configs.text_column
 stopword_file_names = configs.stopword_file_names
-# csv_dataset = configs.csv_dataset
 name_of_topics = configs.name_of_topics
 reports_folder_path = configs.reports_folder_path
 
@@ -86,29 +85,6 @@ class Word_Clouds_Manager():
             return []
 
     def main(self):
-        # Find a CSV file in the selected folder, excluding 'embeddings.csv'
-        csv_files = [
-            f for f in os.listdir(self.selected_folder)
-            if f.endswith('.csv') and f != 'embeddings.csv'
-        ]
-
-        if not csv_files:
-            raise FileNotFoundError("No valid CSV dataset files found in the selected folder.")
-        
-        # Use the first valid CSV file
-        csv_dataset = os.path.join(self.selected_folder, csv_files[0])
-        print(f"Using dataset: {csv_dataset}")
-
-        try:
-            # Load the CSV dataset
-            data = pd.read_csv(csv_dataset)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"CSV dataset not found at path: {csv_dataset}")
-        except pd.errors.EmptyDataError:
-            raise ValueError(f"The CSV dataset at {csv_dataset} is empty.")
-        except Exception as e:
-            raise RuntimeError(f"Failed to load CSV dataset: {e}")
-        
         # Find a CSV file in the selected folder called 'embeddings.csv'
         embedding_files = [
             f for f in os.listdir(self.selected_folder)
@@ -155,20 +131,11 @@ class Word_Clouds_Manager():
         if not isinstance(keyword_dict, dict) or not keyword_dict:
             raise ValueError("The topics JSON file does not contain a valid dictionary of topics and keywords.")
 
-        # Initialize the embedder
-        embedder = SSEMEmbedder(model_name="all-mpnet-base-v2")
-
-        # Generate embeddings for the keywords
-        keyword_embeddings = {
-            feature_name: embedder.generate_embeddings(keywords)
-            for feature_name, keywords in keyword_dict.items()
-        }
-
-        # text_column = 'description_embeddings'
+        text_column = 'description_embeddings'
 
         # Initialize the WordCloudGenerator
         try:
-            generator :IWordCloudGenerator = WordCloudGenerator(data, embeddings_data, keyword_dict, output_subfolder_path, name_of_topics, stopword_file_names, text_column)
+            generator :IWordCloudGenerator = WordCloudGenerator(embeddings_data, keyword_dict, output_subfolder_path, name_of_topics, stopword_file_names, text_column)
         except Exception as e:
             raise RuntimeError(f"Failed to initialize WordCloudGenerator: {e}")
 

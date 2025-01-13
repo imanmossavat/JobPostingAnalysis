@@ -1,165 +1,212 @@
 import os
+import json
 import numpy as np
-from sklearn.decomposition import NMF
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from .text_preprocessor import TextPreprocessor
 from interfaces import ITopicModel
-from datetime import datetime
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, adjusted_rand_score
+from sentence_transformers.util import cos_sim
+from external_systems import SSEMEmbedder
 
-class NMFModel(ITopicModel):
-    """
-    A class implementing Non-negative Matrix Factorization (NMF) for topic modeling.
-
-    Attributes:
-        n_topics (int): Number of topics to extract.
-        data (dict): Dataset containing the descriptions to be processed.
-        stopword_files (list): List of file paths to stopword files for preprocessing.
-        num_top_words (int): Number of top words to display per topic.
-        epochs (int): Maximum number of iterations for the NMF algorithm.
-        output_subfolder (str): Directory for saving output files.
-    """
-
-    def __init__(self, n_topics, data, stopword_files, num_top_words, epochs, output_subfolder):
+class TopicModel(ITopicModel):
+    def __init__(self, embeddings, texts, n_topics, num_keywords, max_iter, model, output_subfolder):
         """
-        Initialize the NMFModel.
+        Initialize the TopicModel class.
 
         Args:
+            embeddings (list): List of precomputed embeddings for the text data.
+            texts (list): List of textual data for topic modeling.
             n_topics (int): Number of topics to extract.
-            data (dict): Dataset containing the descriptions to process.
-            stopword_files (list): File paths to stopword lists.
-            num_top_words (int): Number of top words per topic to display.
-            epochs (int): Maximum number of iterations for NMF.
-            output_subfolder (str): Directory for saving output files.
+            num_keywords (int): Number of top keywords per topic.
+            max_iter (int): Maximum number of iterations for the KMeans algorithm.
+            model (str): Pretrained model to use for generating embeddings.
+            output_subfolder (str): Directory to save the output files.
         """
+        self.embeddings = embeddings
+        self.texts = texts
         self.n_topics = n_topics
-        self.data = data
-        self.num_top_words = num_top_words
-        self.epochs = epochs
+        self.num_keywords = num_keywords
+        self.max_iter = max_iter
         self.output_subfolder = output_subfolder
-        self.preprocessor = TextPreprocessor(stopword_files)
-        self.vectorizer = TfidfVectorizer()
-        self.model = None
-
+        self.model = model
+        self.kmeans = KMeans(n_clusters=n_topics, max_iter=max_iter, random_state=42)
+        self.embedder = SSEMEmbedder(model)
+        self.desc_embeddings = []
         os.makedirs(self.output_subfolder, exist_ok=True)
 
-    def fit(self):
+    def fit_model(self):
         """
-        Fit the NMF model to the data by processing text, creating a document-term matrix, and applying NMF.
+        Fit the KMeans clustering model to the embeddings.
+
+        Processes the input embeddings and fits the KMeans clustering model to 
+        group the data into the specified number of topics.
         """
-        processed_texts = self.preprocessor.preprocess(self.data['Description'])
-        self.doc_term_matrix = self.vectorizer.fit_transform(processed_texts)
-        self.model = NMF(n_components=self.n_topics, random_state=42, max_iter=self.epochs)
-        self.topic_matrix = self.model.fit_transform(self.doc_term_matrix)
+        for desc_embedding in self.embeddings:
+            desc_embedding = np.array(eval(desc_embedding), dtype=np.float32)
+            self.desc_embeddings.append(desc_embedding)
 
-    def display_topics(self):
+        self.kmeans.fit(self.desc_embeddings)
+        self.labels = self.kmeans.labels_
+
+    def extract_keywords(self, texts, labels, num_keywords=5):
         """
-        Display the top words for each topic and save the results to a timestamped file.
-
-        Returns:
-            list: A list of topics, each represented as a list of top words.
-        """
-        feature_names = self.vectorizer.get_feature_names_out()
-        topics = []
-        for idx, topic in enumerate(self.model.components_):
-            topics.append([feature_names[i] for i in topic.argsort()[-self.num_top_words:]])
-
-        timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-        file_path = os.path.join(self.output_subfolder, f'topics_{timestamp}.txt')
-        with open(file_path, 'w') as f:
-            f.write(f"Generated on: {timestamp}\n\n")
-            for i, topic in enumerate(topics, 1):
-                f.write(f"Topic {i}:\n")
-                f.write(", ".join(topic) + "\n\n")
-
-        return topics
-
-    def calculate_topic_coherence(self):
-        """
-        Calculate the topic coherence score based on pairwise cosine similarity of top words within each topic.
-
-        Returns:
-            float: The average topic coherence score.
-        """
-        coherence_scores = []
-        for topic in self.model.components_:
-            top_word_vectors = topic.argsort()[-self.num_top_words:]
-            pairwise_similarities = [
-                cosine_similarity(top_word_vectors[:, [i]].T, top_word_vectors[:, [j]].T)[0, 0]
-                for i in range(len(top_word_vectors)) for j in range(i + 1, len(top_word_vectors))
-            ]
-            coherence_scores.append(np.mean(pairwise_similarities))
-        return np.mean(coherence_scores)
-
-    def calculate_topic_diversity(self):
-        """
-        Calculate the topic diversity score based on unique words across all topics.
-
-        Returns:
-            float: The diversity score, where higher values indicate more unique words across topics.
-        """
-        topics = self.display_topics()
-        if all(topic == topics[0] for topic in topics):
-            return 0.0
-        total_words = sum(len(topic) for topic in topics)
-        unique_words = set(word for topic in topics for word in topic)
-        return len(unique_words) / total_words if total_words else 0.0
-
-    def calculate_silhouette_score(self):
-        """
-        Calculate the silhouette score for the clustering of documents based on topic assignments.
-
-        Returns:
-            float: The silhouette score, which ranges from -1 (poor clustering) to 1 (well-separated clusters).
-        """
-        kmeans = KMeans(n_clusters=self.n_topics, random_state=42)
-        labels = kmeans.fit_predict(self.topic_matrix)
-        return silhouette_score(self.topic_matrix, labels)
-
-    def evaluate_clustering_stability(self, num_runs):
-        """
-        Evaluate the stability of clustering by running multiple clustering trials and calculating the average silhouette score.
+        Extract top keywords for each topic using TF-IDF.
 
         Args:
-            num_runs (int): Number of clustering trials to perform.
+            texts (list): List of textual data.
+            labels (list): List of cluster labels for each document.
+            num_keywords (int): Number of top keywords to extract per topic.
 
         Returns:
-            float: The average silhouette score across trials.
+            dict: A dictionary where keys are topic indices and values are lists of top keywords.
+        """
+        tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = tfidf_vectorizer.fit_transform(texts)
+        
+        keywords = {}
+        for i in range(self.n_topics):
+            topic_docs = [idx for idx, label in enumerate(labels) if label == i]
+            topic_tfidf_matrix = tfidf_matrix[topic_docs]
+            feature_names = np.array(tfidf_vectorizer.get_feature_names_out())
+            sum_tfidf_scores = np.asarray(topic_tfidf_matrix.sum(axis=0)).flatten()
+            top_keywords_idx = sum_tfidf_scores.argsort()[-num_keywords:][::-1]
+            keywords[i] = feature_names[top_keywords_idx]
+        
+        return keywords
+
+    def calculate_silhouette_score(self, embeddings, labels):
+        """
+        Calculate the silhouette score for the clustering.
+
+        Args:
+            embeddings (list): List of embeddings for the data.
+            labels (list): Cluster labels for each document.
+
+        Returns:
+            float: Silhouette score indicating the quality of clustering.
+        """
+        return round(silhouette_score(embeddings, labels), 2)
+
+    def calculate_inertia(self, kmeans):
+        """
+        Calculate the inertia of the KMeans clustering model.
+
+        Args:
+            kmeans (KMeans): Fitted KMeans model.
+
+        Returns:
+            float: Inertia value of the clustering model.
+        """
+        return round(kmeans.inertia_, 2)
+
+    def calculate_ari(self, true_labels, predicted_labels):
+        """
+        Calculate the Adjusted Rand Index (ARI) for the clustering.
+
+        Args:
+            true_labels (list): Ground truth labels for the data.
+            predicted_labels (list): Predicted cluster labels.
+
+        Returns:
+            float: ARI score indicating the similarity between the two label sets.
+        """
+        return round(adjusted_rand_score(true_labels, predicted_labels), 2)
+
+    def evaluate_clustering_stability(self, embeddings, n_clusters, n_runs=10, random_state=42):
+        """
+        Evaluate the stability of clustering using repeated KMeans runs.
+
+        Args:
+            embeddings (list): List of embeddings for the data.
+            n_clusters (int): Number of clusters for KMeans.
+            n_runs (int): Number of repeated runs to evaluate stability.
+            random_state (int): Seed for random number generation.
+
+        Returns:
+            float: Average ARI score across the repeated runs.
         """
         stability_scores = []
-        for _ in range(num_runs):
-            model = NMF(n_components=self.n_topics, random_state=None, max_iter=self.epochs)
-            topic_matrix = model.fit_transform(self.doc_term_matrix)
-            kmeans = KMeans(n_clusters=self.n_topics, random_state=42)
-            labels = kmeans.fit_predict(topic_matrix)
-            stability_scores.append(silhouette_score(topic_matrix, labels))
-        return np.mean(stability_scores)
-
-    def calculate_cosine_similarity(self):
+        for i in range(n_runs):
+            kmeans = KMeans(n_clusters=n_clusters, max_iter=300, random_state=random_state + i)
+            kmeans.fit(embeddings)
+            labels = kmeans.labels_
+            if i > 0:
+                ari_score = adjusted_rand_score(prev_labels, labels)
+                stability_scores.append(ari_score)
+            prev_labels = labels
+        return round(np.mean(stability_scores), 2) if stability_scores else 1.0
+    
+    def calculate_topic_diversity(self, keywords, embedder, num_keywords=7):
         """
-        Calculate pairwise cosine similarity between the components of the NMF model.
+        Calculate the diversity of topics based on the top keywords.
+
+        Args:
+            keywords (dict): Dictionary of top keywords for each topic.
+            embedder (SSEMEmbedder): Embedder to generate word embeddings.
+            num_keywords (int): Number of top keywords to consider for diversity.
 
         Returns:
-            ndarray: A matrix of cosine similarity scores between topics.
+            float: Average diversity score across all topics.
         """
-        return cosine_similarity(self.model.components_)
+        diversity_scores = []
+        for topic, words in keywords.items():
+            word_embeddings = embedder.generate_embeddings(words.tolist())
+            cosine_similarities = cos_sim(word_embeddings, word_embeddings)
+            if not isinstance(cosine_similarities, np.ndarray):
+                cosine_similarities = cosine_similarities.detach().cpu().numpy()
+            upper_triangle_indices = np.triu_indices_from(cosine_similarities, k=1)
+            pairwise_distances = 1 - cosine_similarities[upper_triangle_indices]
+            diversity_scores.append(np.mean(pairwise_distances))
+        return round(np.mean(diversity_scores), 2)
 
-    def calculate_topic_percentage(self):
+    def calculate_topic_percentages(self):
         """
-        Calculate the percentage contribution of each topic across all documents.
+        Calculate the percentage of documents assigned to each topic.
 
         Returns:
-            dict: A dictionary mapping each topic to its percentage contribution.
+            dict: A dictionary where keys are topic indices and values are percentages of documents.
         """
-        topic_sums = np.sum(self.topic_matrix, axis=0)
-        percentages = (topic_sums / np.sum(topic_sums)) * 100
-        topic_percentage_dict = {f"Topic {i+1}": percentage for i, percentage in enumerate(percentages)}
+        topic_counts = np.bincount(self.labels, minlength=self.n_topics)
+        total_documents = len(self.labels)
+        return {i: round((count / total_documents) * 100, 2) for i, count in enumerate(topic_counts)}
+    
+    def execute_topic_modeling(self):
+        """
+        Execute the topic modeling process, save topics and metrics to files, and print the results.
 
-        file_path = os.path.join(self.output_subfolder, 'topic_percentages.txt')
-        with open(file_path, 'w') as f:
-            for topic, percentage in topic_percentage_dict.items():
-                f.write(f"{topic}: {percentage:.2f}%\n")
+        Saves the topics to a JSON file and metrics to another JSON file. Calculates various metrics 
+        including silhouette score, inertia, ARI, clustering stability, topic diversity, and topic percentages.
+        """
+        keywords = self.extract_keywords(self.texts, self.labels, num_keywords=self.num_keywords)
+        topics_file = os.path.join(self.output_subfolder, "topics.json")
+        metrics_file = os.path.join(self.output_subfolder, "metrics.json")
 
-        return topic_percentage_dict
+        # Convert keywords to Python lists for JSON serialization
+        topics_data = {"topics": {int(topic): words.tolist() for topic, words in keywords.items()}}
+        with open(topics_file, "w") as f:
+            json.dump(topics_data, f, indent=4)
+
+        # Round numerical metrics to two decimal places
+        sil_score = round(float(self.calculate_silhouette_score(self.desc_embeddings, self.labels)), 2)
+        inertia = round(float(self.calculate_inertia(self.kmeans)), 2)
+        ari_score = round(float(self.calculate_ari(self.labels, self.labels)), 2)
+        stability_score = round(float(self.evaluate_clustering_stability(self.desc_embeddings, n_clusters=self.n_topics)), 2)
+        diversity_score = round(float(self.calculate_topic_diversity(keywords, self.embedder, num_keywords=self.num_keywords)), 2)
+        topic_percentages = {int(topic): round(float(percentage), 2) for topic, percentage in self.calculate_topic_percentages().items()}
+
+        metrics_data = {
+            "silhouette_score": sil_score,
+            "inertia": inertia,
+            "adjusted_rand_index": ari_score,
+            "clustering_stability": stability_score,
+            "topic_diversity_score": diversity_score,
+            "topic_percentages": topic_percentages
+        }
+        with open(metrics_file, "w") as f:
+            json.dump(metrics_data, f, indent=4)
+
+        print(f"Topics saved to: {topics_file}")
+        print(f"Metrics saved to: {metrics_file}")
+
+        desc_embeddings = self.desc_embeddings
+        return metrics_data, keywords, desc_embeddings
